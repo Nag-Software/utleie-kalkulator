@@ -1,204 +1,131 @@
 import "server-only";
-import { hashInputs, runAssessment } from "@/lib/ai/assess";
-import { parseInputLenient } from "@/lib/calc/schema";
-import { getCachedFinn, setCachedFinn } from "@/lib/finn/cache";
+import type Stripe from "stripe";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
-import { mapFinnToInputs } from "@/lib/finn/map-to-inputs";
-import type { FinnParseOutcome } from "@/lib/finn/parse";
+import {
+  chunkValue,
+  type PaidCalculation,
+  parsePaidMetadata,
+  type StoredFinn,
+} from "@/lib/payments/metadata";
 import { getStripe } from "@/lib/payments/stripe";
-import { getAdminClient } from "@/lib/supabase/admin";
+
+export type PaidLookup =
+  | { kind: "unavailable" } // Stripe ikke konfigurert
+  | { kind: "not_found" } // ugyldig/ukjent session
+  | { kind: "unpaid" }
+  | { kind: "failed"; code: string; refunded: boolean }
+  | {
+      kind: "ready";
+      finn: StoredFinn;
+      calculation: PaidCalculation;
+      paymentIntentId: string;
+      /** rå PI-metadata — trengs for å nullstille gamle chunks ved omskriving */
+      piMetadata: Record<string, string>;
+      sessionId: string;
+    };
+
+const SESSION_ID_PATTERN = /^cs_[a-zA-Z0-9_]+$/;
 
 /**
- * Fulfillment av en betalt FINN-beregning. Kjøres nøyaktig én gang per
- * beregning (atomisk claim i Postgres). Kalles både fra Stripe-webhooken og
- * fra status-pollingens fallback — første claimer vinner.
- *
- * Hard FINN-feil etter betaling → automatisk refusjon.
- * KI-feil alene → beregningen leveres, vurderingen retries via status-ruten.
+ * Slår opp en betalt beregning med Stripe som eneste sannhetskilde, og
+ * fullfører den ved første besøk (henter FINN-data inn i PaymentIntent-
+ * metadata). Hard FINN-feil → automatisk refusjon. Trygg å kalle gjentatte
+ * ganger: samtidige kall kan i verste fall hente FINN dobbelt (ufarlig) —
+ * dobbel refusjon avvises av Stripe og behandles som allerede refundert.
  */
-export async function fulfillCalculation(calculationId: string): Promise<void> {
-  const db = getAdminClient();
-  if (!db) return;
+export async function loadOrFulfill(sessionId: string): Promise<PaidLookup> {
+  const stripe = getStripe();
+  if (!stripe) return { kind: "unavailable" };
+  if (!SESSION_ID_PATTERN.test(sessionId)) return { kind: "not_found" };
 
-  const { data: claimed, error: claimError } = await db.rpc(
-    "claim_calculation",
-    { p_id: calculationId },
-  );
-  if (claimError) {
-    console.error("claim_calculation failed", claimError.message);
-    return;
-  }
-  if (!claimed) return; // allerede behandlet eller under behandling
-
-  const { data: row } = await db
-    .from("calculations")
-    .select("finnkode")
-    .eq("id", calculationId)
-    .single();
-  const finnkode = (row as { finnkode: string | null } | null)?.finnkode;
-
-  if (!finnkode) {
-    await failAndRefund(calculationId, "PARSE_FAIL");
-    return;
-  }
-
-  let outcome: FinnParseOutcome;
+  let session: Stripe.Checkout.Session;
   try {
-    const cached = await getCachedFinn(finnkode);
-    if (cached) {
-      outcome = cached;
-    } else {
-      outcome = await fetchFinnListing(finnkode);
-      await setCachedFinn(finnkode, outcome);
-    }
+    session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["payment_intent"],
+    });
+  } catch {
+    return { kind: "not_found" };
+  }
+
+  if (session.payment_status !== "paid") return { kind: "unpaid" };
+  const paymentIntent = session.payment_intent;
+  if (!paymentIntent || typeof paymentIntent === "string") {
+    return { kind: "not_found" };
+  }
+
+  let calculation = parsePaidMetadata(paymentIntent.metadata);
+
+  if (calculation.state.kind === "failed") {
+    return {
+      kind: "failed",
+      code: calculation.state.code,
+      refunded: calculation.state.refunded,
+    };
+  }
+
+  if (calculation.state.kind === "fulfilled" && calculation.finn) {
+    return {
+      kind: "ready",
+      finn: calculation.finn,
+      calculation,
+      paymentIntentId: paymentIntent.id,
+      piMetadata: paymentIntent.metadata,
+      sessionId,
+    };
+  }
+
+  // Første besøk (eller korrupt lagring): hent fra FINN nå.
+  const finnkode =
+    paymentIntent.metadata.finnkode ?? session.metadata?.finnkode ?? null;
+  if (!finnkode) return { kind: "not_found" };
+
+  try {
+    const outcome = await fetchFinnListing(finnkode);
+    const stored: StoredFinn = { p: outcome.parsed, w: outcome.warnings };
+    const metadata = {
+      state: "fulfilled",
+      finnkode,
+      consent: "true",
+      ...chunkValue("finn", stored, paymentIntent.metadata),
+    };
+    await stripe.paymentIntents.update(paymentIntent.id, { metadata });
+    const merged = { ...paymentIntent.metadata, ...metadata };
+    calculation = parsePaidMetadata(merged);
+    return {
+      kind: "ready",
+      finn: stored,
+      calculation,
+      paymentIntentId: paymentIntent.id,
+      piMetadata: merged,
+      sessionId,
+    };
   } catch (error) {
     const code = error instanceof FinnError ? error.code : "PARSE_FAIL";
-    console.error(`FINN fetch failed for ${calculationId}: ${code}`);
-    await failAndRefund(calculationId, code);
-    return;
-  }
-
-  const inputs = mapFinnToInputs(outcome.parsed);
-  await db
-    .from("calculations")
-    .update({
-      status: "paid",
-      inputs,
-      finn_raw: {
-        fetchedAt: new Date().toISOString(),
-        url: outcome.parsed.url,
-        labels: outcome.labels,
-        parsed: outcome.parsed,
-        warnings: outcome.warnings,
-      },
-      error_code: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", calculationId);
-}
-
-/**
- * Kjører KI-vurderingen for en betalt beregning som mangler den.
- * Idempotent og trygg å kalle gjentatte ganger (f.eks. fra status-polling).
- */
-export async function ensureAiAssessment(calculationId: string): Promise<void> {
-  const db = getAdminClient();
-  if (!db) return;
-
-  const { data } = await db
-    .from("calculations")
-    .select("kind, status, inputs, finn_raw, ai_assessment, ai_runs")
-    .eq("id", calculationId)
-    .single();
-  const row = data as {
-    kind: string;
-    status: string;
-    inputs: Record<string, unknown>;
-    finn_raw: { parsed: Parameters<typeof runAssessment>[1] } | null;
-    ai_assessment: unknown;
-    ai_runs: number;
-  } | null;
-
-  if (!row || row.kind !== "finn" || row.status !== "paid") return;
-  if (row.ai_assessment) return;
-
-  const inputs = parseInputLenient(row.inputs);
-  const assessment = await runAssessment(inputs, row.finn_raw?.parsed ?? null);
-  if (!assessment) return;
-
-  await db
-    .from("calculations")
-    .update({
-      ai_assessment: assessment,
-      inputs_hash: hashInputs(inputs),
-      ai_runs: Math.max(1, row.ai_runs),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", calculationId)
-    .is("ai_assessment", null); // ikke overskriv en parallell kjøring
-}
-
-async function failAndRefund(
-  calculationId: string,
-  errorCode: string,
-): Promise<void> {
-  const db = getAdminClient();
-  if (!db) return;
-
-  await db
-    .from("calculations")
-    .update({
-      status: "failed",
-      error_code: errorCode,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", calculationId);
-
-  const { data } = await db
-    .from("payments")
-    .select("id, stripe_payment_intent_id, status")
-    .eq("calculation_id", calculationId)
-    .eq("status", "completed")
-    .maybeSingle();
-  const payment = data as {
-    id: string;
-    stripe_payment_intent_id: string | null;
-    status: string;
-  } | null;
-
-  const stripe = getStripe();
-  if (!payment?.stripe_payment_intent_id || !stripe) return;
-
-  try {
-    const refund = await stripe.refunds.create({
-      payment_intent: payment.stripe_payment_intent_id,
-    });
-    await db
-      .from("payments")
-      .update({
-        status: "refunded",
-        stripe_refund_id: refund.id,
-        updated_at: new Date().toISOString(),
+    console.error(`fulfillment failed for ${sessionId}: ${code}`);
+    const refunded = await refundOnce(stripe, paymentIntent.id);
+    await stripe.paymentIntents
+      .update(paymentIntent.id, {
+        metadata: { state: `${refunded ? "refunded" : "failed"}:${code}` },
       })
-      .eq("id", payment.id);
-    await db
-      .from("calculations")
-      .update({ status: "refunded", updated_at: new Date().toISOString() })
-      .eq("id", calculationId);
-  } catch (error) {
-    console.error(
-      `refund failed for ${calculationId}`,
-      error instanceof Error ? error.message : error,
-    );
-    await db
-      .from("payments")
-      .update({ status: "refund_failed", updated_at: new Date().toISOString() })
-      .eq("id", payment.id);
+      .catch(() => undefined);
+    return { kind: "failed", code, refunded };
   }
 }
 
-/**
- * Registrerer at en Checkout-session er betalt og trigger fulfillment.
- * Kalles fra webhook og fra status-fallback (session verifisert mot Stripe).
- */
-export async function handlePaidSession(session: {
-  id: string;
-  payment_intent: string | null;
-  calculationId: string;
-}): Promise<void> {
-  const db = getAdminClient();
-  if (!db) return;
-
-  await db
-    .from("payments")
-    .update({
-      status: "completed",
-      stripe_payment_intent_id: session.payment_intent,
-      angrerett_consent: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("stripe_session_id", session.id)
-    .eq("status", "created");
-
-  await fulfillCalculation(session.calculationId);
+async function refundOnce(
+  stripe: Stripe,
+  paymentIntentId: string,
+): Promise<boolean> {
+  try {
+    await stripe.refunds.create({ payment_intent: paymentIntentId });
+    return true;
+  } catch (error) {
+    const stripeError = error as { code?: string; message?: string };
+    if (stripeError.code === "charge_already_refunded") return true;
+    console.error(
+      `refund failed for ${paymentIntentId}`,
+      stripeError.message ?? error,
+    );
+    return false;
+  }
 }

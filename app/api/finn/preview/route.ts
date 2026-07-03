@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  jsonError,
-  readJsonBody,
-  tooManyRequests,
-} from "@/lib/api-helpers";
-import { getCachedFinn, setCachedFinn } from "@/lib/finn/cache";
+import { jsonError, readJsonBody, tooManyRequests } from "@/lib/api-helpers";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
 import { extractFinnkode } from "@/lib/finn/finnkode";
 import type { FinnParseOutcome } from "@/lib/finn/parse";
 import type { FinnPreview } from "@/lib/finn/types";
 import { checkRateLimit } from "@/lib/rate-limit";
+
+export const maxDuration = 30;
 
 const bodySchema = z.object({ finnUrl: z.string().min(1).max(500) });
 
@@ -49,12 +46,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const cached = await getCachedFinn(finnkode);
-  if (cached) return NextResponse.json(toPreview(cached));
-
   try {
     const outcome = await fetchFinnListing(finnkode);
-    await setCachedFinn(finnkode, outcome);
     return NextResponse.json(toPreview(outcome));
   } catch (error) {
     if (error instanceof FinnError) {

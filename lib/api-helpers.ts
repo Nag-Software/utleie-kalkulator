@@ -9,9 +9,6 @@ export function jsonError(
   return NextResponse.json({ error, message }, { status });
 }
 
-export const dbUnavailable = () =>
-  jsonError(503, "DB_DISABLED", "Lagring er ikke tilgjengelig ennå.");
-
 export const paymentsUnavailable = () =>
   jsonError(503, "PAYMENTS_DISABLED", "Betaling er ikke tilgjengelig ennå.");
 

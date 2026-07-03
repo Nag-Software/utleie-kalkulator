@@ -1,14 +1,7 @@
 "use client";
 
-import { Loader2, Share2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import {
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { Share2 } from "lucide-react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calculate } from "@/lib/calc/engine";
@@ -17,7 +10,11 @@ import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { InputPanel } from "./input-panel";
 import { getVerdict, ResultsPanel } from "./results-panel";
-import { decodeInputFromParams, encodeInputToParams, hasAnyCalcParam } from "./url-state";
+import {
+  decodeInputFromParams,
+  encodeInputToParams,
+  hasAnyCalcParam,
+} from "./url-state";
 
 type Action =
   | { type: "set"; field: keyof CalcInput; value: CalcInput[keyof CalcInput] }
@@ -34,13 +31,13 @@ function reducer(state: CalcInput, action: Action): CalcInput {
 
 export interface CalculatorProps {
   initialInput?: CalcInput;
-  /** les/skriv inputs i URL-query (gratis kalkulator på forsiden) */
+  /** les/skriv inputs i URL-query; andre query-params (f.eks. session_id) bevares */
   urlSync?: boolean;
-  /** vis Del- og Lagre-knapper (gratis-modus) */
+  /** vis Del-knapp over inputene */
   shareActions?: boolean;
   /** KI-vurdering (betalte beregninger) */
   aiPanel?: React.ReactNode;
-  /** kalles debounced når brukeren endrer inputs (lagrede beregninger) */
+  /** kalles debounced når brukeren endrer inputs */
   onInputChange?: (input: CalcInput) => void;
 }
 
@@ -53,84 +50,62 @@ export function Calculator({
 }: CalculatorProps) {
   const [input, dispatch] = useReducer(reducer, initialInput ?? DEFAULT_INPUT);
   const result = useMemo(() => calculate(input), [input]);
-  const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const hydratedFromUrl = useRef(false);
+  const initialRef = useRef(input);
+  const hydrated = useRef(false);
 
-  // Les delte verdier fra URL etter mount (siden forblir statisk generert)
+  // Uten server-gitt initialInput: les delte verdier fra URL etter mount
+  // (siden forblir statisk generert). Med initialInput har serveren
+  // allerede flettet inn URL-verdiene.
   useEffect(() => {
-    if (!urlSync || hydratedFromUrl.current) return;
-    hydratedFromUrl.current = true;
+    if (hydrated.current) return;
+    hydrated.current = true;
+    if (!urlSync || initialInput) return;
     const params = new URLSearchParams(window.location.search);
     if (hasAnyCalcParam(params)) {
       dispatch({ type: "replace", input: decodeInputFromParams(params) });
     }
-  }, [urlSync]);
+  }, [urlSync, initialInput]);
 
-  // Skriv ikke-default-verdier tilbake til URL (debounced, uten RSC-refetch)
+  // Skriv inputs til URL (debounced) etter første brukerendring.
+  // Fremmede params (session_id m.m.) bevares.
   useEffect(() => {
-    if (!urlSync || !hydratedFromUrl.current) return;
+    if (!urlSync || input === initialRef.current) return;
     const timeout = setTimeout(() => {
-      const params = encodeInputToParams(input);
+      const params = new URLSearchParams(window.location.search);
+      for (const key of Object.keys(DEFAULT_INPUT)) params.delete(key);
+      for (const [key, value] of encodeInputToParams(input)) {
+        params.set(key, value);
+      }
       const query = params.toString();
-      const url = query
-        ? `${window.location.pathname}?${query}`
-        : window.location.pathname;
-      window.history.replaceState(null, "", url);
+      window.history.replaceState(
+        null,
+        "",
+        query ? `${window.location.pathname}?${query}` : window.location.pathname,
+      );
     }, 300);
     return () => clearTimeout(timeout);
   }, [input, urlSync]);
 
-  // Meld fra om endringer (debounced) — brukes til PATCH på lagrede beregninger
+  // Meld fra om endringer (debounced)
   const onInputChangeRef = useRef(onInputChange);
   onInputChangeRef.current = onInputChange;
-  const isFirstChange = useRef(true);
   useEffect(() => {
-    if (!onInputChangeRef.current) return;
-    if (isFirstChange.current) {
-      isFirstChange.current = false;
-      return;
-    }
+    if (!onInputChangeRef.current || input === initialRef.current) return;
     const timeout = setTimeout(() => onInputChangeRef.current?.(input), 800);
     return () => clearTimeout(timeout);
   }, [input]);
 
   async function copyShareLink() {
-    const params = encodeInputToParams(input);
+    const params = new URLSearchParams(window.location.search);
+    for (const key of Object.keys(DEFAULT_INPUT)) params.delete(key);
+    for (const [key, value] of encodeInputToParams(input)) params.set(key, value);
     const query = params.toString();
-    const url = `${window.location.origin}/${query ? `?${query}` : ""}`;
+    const url = `${window.location.origin}${window.location.pathname}${query ? `?${query}` : ""}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Lenke kopiert – alle tallene dine ligger i lenken.");
     } catch {
       toast.error("Kunne ikke kopiere lenken.");
-    }
-  }
-
-  async function saveCalculation() {
-    setSaving(true);
-    try {
-      const response = await fetch("/api/calculations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inputs: input }),
-      });
-      if (response.status === 503) {
-        toast.info("Lagring er ikke tilgjengelig ennå – bruk Del-knappen i stedet.");
-        return;
-      }
-      if (response.status === 429) {
-        toast.error("For mange lagringer på kort tid. Prøv igjen senere.");
-        return;
-      }
-      if (!response.ok) throw new Error(String(response.status));
-      const { id } = (await response.json()) as { id: string };
-      toast.success("Beregningen er lagret.");
-      router.push(`/beregning/${id}`);
-    } catch {
-      toast.error("Noe gikk galt ved lagring. Prøv igjen.");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -141,25 +116,15 @@ export function Calculator({
       <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
         <div className="rounded-xl border bg-card px-4 py-2">
           {shareActions ? (
-            <div className="flex gap-2 border-b py-3">
+            <div className="border-b py-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={copyShareLink}
-                className="flex-1"
+                className="w-full"
               >
                 <Share2 data-slot="icon" />
-                Del beregning
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={saveCalculation}
-                disabled={saving}
-                className="flex-1"
-              >
-                {saving ? <Loader2 data-slot="icon" className="animate-spin" /> : null}
-                Lagre
+                Del beregning – tallene ligger i lenken
               </Button>
             </div>
           ) : null}

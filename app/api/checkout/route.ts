@@ -9,7 +9,6 @@ import {
 import { getConfig } from "@/lib/config";
 import { getStripe } from "@/lib/payments/stripe";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getAdminClient } from "@/lib/supabase/admin";
 import { PRICE_ORE } from "@/lib/site";
 
 const bodySchema = z.object({
@@ -19,7 +18,8 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   const config = getConfig();
-  if (!config.features.payments) return paymentsUnavailable();
+  const stripe = getStripe();
+  if (!config.features.payments || !stripe) return paymentsUnavailable();
 
   const { allowed } = await checkRateLimit(request, "checkout", 5, 600);
   if (!allowed) return tooManyRequests();
@@ -35,23 +35,7 @@ export async function POST(request: Request) {
       "Ugyldig forespørsel. Bekreft vilkårene og prøv igjen.",
     );
   }
-
-  const db = getAdminClient();
-  const stripe = getStripe();
-  if (!db || !stripe) return paymentsUnavailable();
-
   const { finnkode } = parsed.data;
-
-  const { data: calcRow, error: insertError } = await db
-    .from("calculations")
-    .insert({ kind: "finn", status: "pending_payment", finnkode })
-    .select("id")
-    .single();
-  if (insertError || !calcRow) {
-    console.error("checkout insert failed", insertError?.message);
-    return jsonError(500, "CHECKOUT_FAILED", "Kunne ikke starte betalingen.");
-  }
-  const calculationId = (calcRow as { id: string }).id;
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -70,9 +54,9 @@ export async function POST(request: Request) {
           },
         },
       ],
-      client_reference_id: calculationId,
-      metadata: { calculation_id: calculationId, finnkode },
-      success_url: `${config.siteUrl}/beregning/${calculationId}?session_id={CHECKOUT_SESSION_ID}`,
+      metadata: { finnkode },
+      payment_intent_data: { metadata: { finnkode } },
+      success_url: `${config.siteUrl}/beregning?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${config.siteUrl}/?betaling=avbrutt`,
       custom_text: {
         submit: {
@@ -83,21 +67,12 @@ export async function POST(request: Request) {
     });
 
     if (!session.url) throw new Error("session.url mangler");
-
-    await db.from("payments").insert({
-      calculation_id: calculationId,
-      stripe_session_id: session.id,
-      amount_ore: PRICE_ORE,
-      status: "created",
-    });
-
-    return NextResponse.json({ checkoutUrl: session.url, calculationId });
+    return NextResponse.json({ checkoutUrl: session.url });
   } catch (error) {
     console.error(
       "stripe checkout failed",
       error instanceof Error ? error.message : error,
     );
-    await db.from("calculations").delete().eq("id", calculationId);
     return jsonError(500, "CHECKOUT_FAILED", "Kunne ikke starte betalingen.");
   }
 }

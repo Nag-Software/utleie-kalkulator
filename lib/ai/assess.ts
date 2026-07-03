@@ -20,7 +20,8 @@ Regler:
 - Vær kvantitativ: referer til konkrete tall fra grunnlaget når du begrunner.
 - Ingen salgsspråk, ingen kjøpsanbefaling, ingen fraråding — kun analyse.
 - Flagg usikkerhet eksplisitt der grunnlaget er tynt.
-- Skriv alt på norsk bokmål, kort og presist.
+- Skriv alt på norsk bokmål, kort og presist. Sammendraget maks 3 setninger;
+  hvert kulepunkt maks én setning.
 
 probability_profitable (0–100) er din helhetlige, kalibrerte sannsynlighet for at
 investeringen er lønnsom over den valgte horisonten, der lønnsom betyr positiv
@@ -60,13 +61,23 @@ const RESPONSE_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+// Grensene holder vurderingen innenfor Stripe-metadata-budsjettet (lageret
+// for betalte beregninger) — trunkerer i stedet for å feile.
+const clip = (max: number) => z.string().transform((v) => v.slice(0, max));
+const clipList = (maxItems: number, maxLength: number) =>
+  z.array(z.string()).transform((items) =>
+    items.slice(0, maxItems).map((item) => item.slice(0, maxLength)),
+  );
+
 const assessmentSchema = z.object({
-  probability_profitable: z.number().transform((v) => Math.round(Math.max(0, Math.min(100, v)))),
-  summary: z.string().max(2000),
-  strengths: z.array(z.string().max(500)).max(6),
-  weaknesses: z.array(z.string().max(500)).max(6),
-  risks: z.array(z.string().max(500)).max(6),
-  assumptions_to_verify: z.array(z.string().max(500)).max(5),
+  probability_profitable: z
+    .number()
+    .transform((v) => Math.round(Math.max(0, Math.min(100, v)))),
+  summary: clip(700),
+  strengths: clipList(5, 220),
+  weaknesses: clipList(5, 220),
+  risks: clipList(4, 220),
+  assumptions_to_verify: clipList(3, 220),
 });
 
 function buildPayload(inputs: CalcInput, finn: FinnParsedData | null) {

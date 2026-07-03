@@ -7,53 +7,60 @@ koster 9,90 kr per beregning (Stripe, uten konto).
 ## Stack
 
 - **Next.js 16** (App Router) + React 19 + Tailwind 4 + shadcn/ui + recharts
-- **Supabase Postgres** (kun server-side, service role, RLS deny-all)
-- **Stripe Checkout** (engangsbetaling, webhook + polling-fallback, automatisk refusjon)
+- **Stripe Checkout** — også eneste datalager: ingen database
 - **OpenAI** structured output (objektiv vurdering, 0–100 % sannsynlighet)
 
 ## Kom i gang
 
 ```bash
 pnpm install
-pnpm dev        # kjører uten nøkler — betaling/lagring er gated
-pnpm test       # vitest: kalkulatormotor + FINN-parser (fixtures)
+pnpm dev        # kjører uten nøkler — betaling/KI er gated
+pnpm test       # vitest: kalkulatormotor, FINN-parser (fixtures), metadata-lager
 pnpm build
 ```
 
-Appen **booter uten nøkler**: uten `SUPABASE_*` er lagring skjult, uten
-`STRIPE_*` viser FINN-dialogen «betaling kommer snart», uten `OPENAI_API_KEY`
-viser betalte beregninger «vurdering genereres» til nøkkelen finnes.
-Env-verdier som starter med `PLACEHOLDER` behandles som fraværende.
+Appen **booter uten nøkler**: uten `STRIPE_SECRET_KEY` viser FINN-dialogen
+«betaling kommer snart»; uten `OPENAI_API_KEY` får betalte beregninger
+vurderingen så snart nøkkelen er på plass. Env-verdier som starter med
+`PLACEHOLDER` behandles som fraværende. Kopier `.env.example` til `.env.local`.
 
-Kopier `.env.example` til `.env.local` og fyll inn etter hvert.
+## Arkitektur: ingen database
 
-## Aktivering av tjenester
+Stripe er eneste sannhetskilde for betalte beregninger:
 
-1. **Supabase:** Opprett prosjekt, kjør `supabase/migrations/0001_init.sql`
-   (SQL editor eller MCP `apply_migration`), sett `SUPABASE_URL` +
-   `SUPABASE_SERVICE_ROLE_KEY`.
-2. **Stripe:** Sett `STRIPE_SECRET_KEY`. Registrer webhook-endepunkt
-   `https://utleie-kalkulator.no/api/stripe/webhook` for eventet
-   `checkout.session.completed`, og sett `STRIPE_WEBHOOK_SECRET`.
-   Lokalt: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
-3. **OpenAI:** Sett `OPENAI_API_KEY` (+ ev. `OPENAI_MODEL`, default `gpt-5-mini`).
+1. **Kjøp:** `/api/checkout` oppretter en Checkout Session med `finnkode` i
+   metadata. Kvitteringslenken er `/beregning?session_id=cs_…` — selve
+   session-id-en er tilgangsnøkkelen.
+2. **Første visning:** serveren verifiserer betalingen mot Stripe, henter
+   FINN-annonsen og skriver parsede tall inn i PaymentIntent-metadata
+   (chunket JSON, `lib/payments/metadata.ts`). Refresh og senere besøk leser
+   derfra — fungerer selv om annonsen senere slettes fra FINN.
+3. **KI-vurdering:** klienten kaller `/api/paid/ai` (kjøring nr. 1 ved første
+   besøk; én re-kjøring inkludert når tallene er endret — maks 2, håndhevet
+   via `ai_runs`/`inputs_hash` i samme metadata).
+4. **Feil → refusjon:** hard FINN-feil ved første henting refunderer beløpet
+   automatisk og merker betalingen `refunded:<KODE>`.
+5. **Justeringer og deling:** alle kalkulatorverdier ligger i URL-en (gratis
+   og betalt). Ingen webhook, ingen cron, ingen server-lagring av persondata.
 
-## Arkitekturnotater
+Øvrige notater:
 
-- Kalkulatormotoren (`lib/calc/engine.ts`) er ren, isomorf TS — kjører live i
+- Kalkulatormotoren (`lib/calc/engine.ts`) er ren, isomorf TS — live i
   nettleseren og server-side som grunnlag for KI-vurderingen.
 - FINN-parsing (`lib/finn/`) er label-basert (dt/dd-tekst, aldri CSS-klasser)
-  med feiltaksonomi `NOT_FOUND | BLOCKED | TIMEOUT | PARSE_FAIL`. Hard feil
-  etter betaling → automatisk Stripe-refusjon. Fixtures fra ekte annonser i
-  `lib/finn/__fixtures__/`.
-- Fulfillment (`lib/payments/fulfill.ts`) claimes atomisk i Postgres
-  (`claim_calculation`) — webhook og polling-fallback kappes trygt.
-- Rate limiting: fixed-window-teller i Postgres per saltet IP-hash + rute.
-- Gratis deling uten DB: alle inputs kodes i URL-query (`url-state.ts`).
-- Daglig cron (`vercel.json` → `/api/cron/cleanup`) rydder rate limits,
-  FINN-cache og utløpte ubetalte beregninger.
+  med feiltaksonomi `NOT_FOUND | BLOCKED | TIMEOUT | PARSE_FAIL` og fixtures
+  fra ekte annonser i `lib/finn/__fixtures__/`.
+- Rate limiting er best-effort i minnet per serverless-instans — de dyre
+  operasjonene ligger bak betaling.
+
+## Aktivering av nøkler (ingen kodeendringer)
+
+1. **Stripe:** Sett `STRIPE_SECRET_KEY` i Vercel (erstatt PLACEHOLDER).
+   Ingen webhook å registrere.
+2. **OpenAI:** Sett `OPENAI_API_KEY` (+ ev. `OPENAI_MODEL`, default
+   `gpt-5-mini`).
 
 ## Dev-verktøy
 
-- `FINN_FORCE_ERROR=BLOCKED pnpm dev` — test refusjonsstien uten å ødelegge noe.
+- `FINN_FORCE_ERROR=BLOCKED pnpm dev` — test refusjonsstien.
 - Stripe test-modus + testkort `4242 4242 4242 4242` for hele kjøpsflyten.
