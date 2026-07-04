@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Calculator } from "@/components/calculator/calculator";
 import { FinnImportDialog } from "@/components/calculator/finn-import-dialog";
+import { Button } from "@/components/ui/button";
 import { FAQ_ITEMS } from "@/lib/faq";
 import {
   faqJsonLd,
@@ -251,15 +252,22 @@ export default function HomePage() {
             Utleiekalkulator
           </h1>
           <p className="mt-2 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Se på sekunder om en utleiebolig lønner seg – gratis og uten konto.
+            Se på sekunder om en utleiebolig lønner seg.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
-            <FinnImportDialog />
+            <FinnImportDialog
+              trigger={
+                <Button size="lg">
+                  <Sparkles data-slot="icon" />
+                  Hent fra FINN-annonse – {PRICE_NOK} kr
+                </Button>
+              }
+            />
             <a
               href="#kalkulator"
               className="text-sm font-medium text-primary hover:underline"
             >
-              eller fyll inn tallene selv ↓
+              eller bruk kalkulatoren gratis ↓
             </a>
           </div>
         </section>
