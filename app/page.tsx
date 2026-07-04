@@ -10,7 +10,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Calculator } from "@/components/calculator/calculator";
 import { FinnImportDialog } from "@/components/calculator/finn-import-dialog";
-import { Button } from "@/components/ui/button";
 import { FAQ_ITEMS } from "@/lib/faq";
 import {
   faqJsonLd,
@@ -50,17 +49,17 @@ function HowItWorks() {
     {
       icon: CalculatorIcon,
       title: "Legg inn tallene",
-      text: "Fyll inn kjøpesum, leie og kostnader manuelt – eller lim inn en FINN-annonse og få alt utfylt automatisk.",
+      text: "Fyll inn selv – eller lim inn en FINN-annonse og få alt utfylt automatisk.",
     },
     {
       icon: BarChart3,
-      title: "Se lønnsomheten umiddelbart",
-      text: "Kontantstrøm per måned, yield, break-even og prognose oppdateres live mens du justerer rente, leie og ledighet.",
+      title: "Se svaret umiddelbart",
+      text: "Kontantstrøm, yield og break-even oppdateres live mens du justerer.",
     },
     {
       icon: Link2,
-      title: "Del og sammenlign",
-      text: "Alle tallene ligger i lenken. Del beregningen med medinvestor, banken eller deg selv – uten konto.",
+      title: "Del med lenke",
+      text: "Alle tallene ligger i lenken – del med medinvestor eller banken.",
     },
   ];
   return (
@@ -83,10 +82,8 @@ function HowItWorks() {
 
 function FinnSection() {
   const points = [
-    "Kjøpesum, felleskostnader, fellesgjeld og omkostninger hentes automatisk",
-    "Riktig dokumentavgift ut fra eieform (selveier vs. andel)",
-    "Objektiv KI-vurdering: sannsynlighet 0–100 % for lønnsomhet, med styrker, svakheter og risikofaktorer",
-    "Én inkludert re-vurdering etter at du har justert tallene dine",
+    "Kjøpesum, felleskostnader, fellesgjeld og omkostninger fylles ut automatisk",
+    "Objektiv KI-vurdering med sannsynlighet 0–100 % for lønnsomhet",
     "Automatisk refusjon hvis annonsen ikke kan hentes",
   ];
   return (
@@ -99,7 +96,7 @@ function FinnSection() {
               Vurderer du en konkret bolig?
             </p>
             <h2 id="finn-import" className="mt-2 text-2xl font-bold tracking-tight">
-              Lim inn FINN-annonsen – få tallene og en objektiv KI-vurdering
+              Lim inn FINN-annonsen – vi gjør resten
             </h2>
             <ul className="mt-5 space-y-2.5">
               {points.map((point) => (
@@ -249,27 +246,21 @@ export default function HomePage() {
       />
 
       <div className="mx-auto w-full max-w-6xl px-4">
-        <section className="pb-10 pt-10 sm:pt-14">
-          <div className="max-w-3xl">
-            <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
-              Utleiekalkulator: lønner det seg å leie ut?
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Beregn kontantstrøm, yield og avkastning på utleiebolig – helt
-              gratis, uten konto. Juster rente, leie og kostnader og se svaret
-              umiddelbart. Eller lim inn en FINN-annonse og få tallene utfylt
-              automatisk med en objektiv KI-vurdering av lønnsomheten.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <FinnImportDialog />
-              <Button asChild variant="outline" size="lg">
-                <a href="#kalkulator">Bruk manuelle tall – gratis</a>
-              </Button>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Ingen konto. Ingen lagring uten samtykke. Ikke finansiell
-              rådgivning.
-            </p>
+        <section className="pb-6 pt-8 sm:pt-10">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Utleiekalkulator
+          </h1>
+          <p className="mt-2 max-w-xl text-base text-muted-foreground sm:text-lg">
+            Se på sekunder om en utleiebolig lønner seg – gratis og uten konto.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
+            <FinnImportDialog />
+            <a
+              href="#kalkulator"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              eller fyll inn tallene selv ↓
+            </a>
           </div>
         </section>
 

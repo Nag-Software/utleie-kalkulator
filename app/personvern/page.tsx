@@ -32,22 +32,21 @@ export default function PersonvernPage() {
         <ul>
           <li>
             <strong>Beregninger:</strong> Tallene du legger inn (kjøpesum,
-            leie, kostnader) behandles i nettleseren din. Velger du å lagre en
-            beregning, eller kjøper en FINN-beregning, lagres tallene anonymt
-            hos vår databaseleverandør Supabase (EU) med en hemmelig lenke.
-            Beregninger knyttes ikke til navn, e-post eller andre
-            identifikatorer.
+            leie, kostnader) behandles i nettleseren din. Vi har ingen egen
+            database og lagrer ingen beregninger på egne servere; deling skjer
+            ved at tallene legges i lenken du selv deler.
           </li>
           <li>
-            <strong>Betaling:</strong> Kjøp gjennomføres hos Stripe. Stripe
+            <strong>Betaling:</strong> Kjøp gjennomføres hos Stripe, som
             behandler kort- og kontaktopplysninger som selvstendig
-            behandlingsansvarlig for betalingsprosessen. Vi lagrer kun en
-            teknisk referanse til betalingen (uten kortdata).
+            behandlingsansvarlig. Ved kjøp av en FINN-beregning lagres
+            boligtallene fra annonsen og KI-vurderingen som del av
+            betalingsoppføringen hos Stripe – dette er opplysninger om en
+            bolig, ikke om deg.
           </li>
           <li>
-            <strong>Misbruksvern:</strong> For å begrense misbruk lagrer vi en
-            saltet hash av IP-adressen din (kan ikke reverseres til IP) i
-            inntil ett døgn. Rå IP-adresser lagres ikke.
+            <strong>Misbruksvern:</strong> IP-adresser brukes kun flyktig i
+            minnet for å begrense misbruk, og lagres ikke.
           </li>
           <li>
             <strong>KI-vurdering:</strong> Ved betalte beregninger sendes
@@ -70,7 +69,7 @@ export default function PersonvernPage() {
         <p>
           Siden vi ikke kan knytte beregninger til deg som person, har vi
           normalt ingen personopplysninger å utlevere eller slette. Har du
-          spørsmål, eller ønsker du en lagret beregning slettet (oppgi lenken),
+          spørsmål, eller ønsker du en betalt beregning slettet (oppgi lenken),
           kontakt oss på{" "}
           <a href="mailto:casper@nagsoftware.no">casper@nagsoftware.no</a>. Du
           har rett til å klage til Datatilsynet.

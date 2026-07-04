@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2 } from "lucide-react";
+import { RotateCcw, Share2 } from "lucide-react";
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -116,15 +116,26 @@ export function Calculator({
       <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
         <div className="rounded-xl border bg-card px-4 py-2">
           {shareActions ? (
-            <div className="border-b py-3">
+            <div className="flex gap-2 border-b py-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={copyShareLink}
-                className="w-full"
+                className="flex-1"
               >
                 <Share2 data-slot="icon" />
-                Del beregning – tallene ligger i lenken
+                Del beregning
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
+                  toast.success("Kalkulatoren er nullstilt.");
+                }}
+              >
+                <RotateCcw data-slot="icon" />
+                Nullstill
               </Button>
             </div>
           ) : null}

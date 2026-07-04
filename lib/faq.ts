@@ -42,6 +42,6 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Lagres tallene mine?",
     answer:
-      "Nei, ikke med mindre du velger det. Den gratis kalkulatoren kjører i nettleseren din, og deling skjer ved at tallene legges i lenken. Velger du å lagre, eller kjøper en FINN-beregning, lagres beregningen anonymt med en hemmelig lenke – uten konto og uten personopplysninger.",
+      "Nei. Kalkulatoren kjører i nettleseren din, og deling skjer ved at tallene legges i lenken – vi har ingen database. Kjøper du en FINN-beregning, lagres boligtallene og KI-vurderingen sammen med betalingen hos Stripe, og lenken din er nøkkelen til beregningen.",
   },
 ];

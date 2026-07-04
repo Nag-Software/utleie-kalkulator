@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowRight, Loader2, Search, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +31,7 @@ export function FinnImportDialog({
   const [error, setError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [paymentsEnabled, setPaymentsEnabled] = useState<boolean | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!open || paymentsEnabled !== null) return;
@@ -117,15 +118,14 @@ export function FinnImportDialog({
         <DialogHeader>
           <DialogTitle>Hent tall fra FINN</DialogTitle>
           <DialogDescription>
-            Lim inn lenken til boligannonsen. Vi fyller ut kjøpesum,
-            felleskostnader, fellesgjeld og omkostninger automatisk, og du får
-            en objektiv KI-vurdering av lønnsomheten. {PRICE_NOK} kr per
-            beregning – du justerer leie og forutsetninger selv etterpå.
+            Vi fyller ut tallene fra annonsen og gir deg en objektiv
+            KI-vurdering av lønnsomheten.
           </DialogDescription>
         </DialogHeader>
 
         {phase === "input" || phase === "previewing" ? (
           <form
+            ref={formRef}
             className="space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
@@ -133,12 +133,16 @@ export function FinnImportDialog({
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="finn-url">FINN-lenke</Label>
+              <Label htmlFor="finn-url">Lim inn FINN-lenken</Label>
               <Input
                 id="finn-url"
-                placeholder="https://www.finn.no/realestate/homes/ad.html?finnkode=…"
+                placeholder="https://www.finn.no/…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+                onPaste={() =>
+                  setTimeout(() => formRef.current?.requestSubmit(), 50)
+                }
+                autoComplete="off"
                 autoFocus
               />
             </div>
@@ -209,10 +213,8 @@ export function FinnImportDialog({
                     className="mt-0.5 size-4 accent-primary"
                   />
                   <span>
-                    Jeg samtykker til at leveringen starter umiddelbart etter
-                    betaling, og at angreretten dermed bortfaller
-                    (angrerettloven § 22 n). Hvis hentingen fra FINN feiler,
-                    refunderes beløpet automatisk.
+                    Jeg samtykker til at leveringen starter umiddelbart, og at
+                    angreretten dermed bortfaller (angrerettloven § 22 n).
                   </span>
                 </label>
                 <Button
@@ -228,6 +230,11 @@ export function FinnImportDialog({
                   )}
                   Hent tall og beregn – {PRICE_NOK} kr
                 </Button>
+                <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                  <ShieldCheck className="size-3.5" aria-hidden />
+                  Sikker betaling med Stripe · Automatisk refusjon hvis henting
+                  feiler
+                </p>
               </>
             )}
           </div>
