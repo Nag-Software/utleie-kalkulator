@@ -36,12 +36,35 @@ export default function OpenGraphImage() {
               width: "56px",
               height: "56px",
               borderRadius: "12px",
-              background: "#1e5eff",
-              fontSize: "26px",
-              fontWeight: 700,
+              background: "linear-gradient(135deg, #2563eb 0%, #1c3faf 100%)",
             }}
           >
-            kr
+            <svg viewBox="0 0 64 64" width="56" height="56">
+              <path
+                d="M14 27.5 L32 12 L50 27.5"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M37.5 31.5 L44 31.5 L44 38"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
           <div style={{ fontSize: "30px", opacity: 0.9 }}>utleie-kalkulator.no</div>
         </div>

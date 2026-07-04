@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -47,12 +48,7 @@ export default function RootLayout({
         <header className="border-b bg-card">
           <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span
-                aria-hidden
-                className="flex size-7 items-center justify-center rounded-md bg-primary font-mono text-sm text-primary-foreground"
-              >
-                kr
-              </span>
+              <Logo className="size-7" />
               {SITE_NAME}
             </Link>
             <nav className="flex items-center gap-5 text-sm text-muted-foreground">
