@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArticleLayout } from "@/components/article-layout";
-import { getGuide } from "@/lib/guides";
+import { getGuide, guidePageMetadata } from "@/lib/guides";
 
 const meta = getGuide("hva-kan-jeg-leie-ut-for");
 
-export const metadata: Metadata = {
-  title: meta.title,
-  description: meta.description,
-  alternates: { canonical: `/guide/${meta.slug}` },
-};
+export const metadata: Metadata = guidePageMetadata(meta.slug);
 
 export default function Page() {
   return (

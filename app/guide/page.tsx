@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GUIDES } from "@/lib/guides";
+import { guideListJsonLd, jsonLdString } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
   title: "Guider om utleie, yield og skatt",
@@ -12,6 +13,12 @@ export const metadata: Metadata = {
 export default function GuideIndexPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdString(guideListJsonLd(GUIDES)),
+        }}
+      />
       <h1 className="text-3xl font-bold tracking-tight">
         Guider om utleie og boliginvestering
       </h1>

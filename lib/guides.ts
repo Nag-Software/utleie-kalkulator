@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 export interface GuideMeta {
   slug: string;
   title: string;
@@ -54,6 +56,20 @@ export const GUIDES: GuideMeta[] = [
     datePublished: "2026-07-06",
   },
   {
+    slug: "airbnb-og-korttidsutleie",
+    title: "Airbnb og korttidsutleie: skatt og regler (2026)",
+    description:
+      "10 000-kronersgrensen og 85 %-regelen forklart, 30-døgnsgrensen i borettslag og 90-døgnsgrensen i sameie – og når korttidsutleie blir virksomhet.",
+    datePublished: "2026-07-10",
+  },
+  {
+    slug: "utleiemegler-eller-leie-ut-selv",
+    title: "Utleiemegler eller leie ut selv? Pris og regnestykke (2026)",
+    description:
+      "Hva utleiemegler og forvaltning faktisk koster (typisk 8–12 % av leien + mva), hva du får for pengene, og hvordan du regner effekten inn i kontantstrømmen.",
+    datePublished: "2026-07-10",
+  },
+  {
     slug: "dokumentavgift-og-omkostninger",
     title: "Dokumentavgift og omkostninger ved boligkjøp",
     description:
@@ -66,6 +82,28 @@ export function getGuide(slug: string): GuideMeta {
   const guide = GUIDES.find((g) => g.slug === slug);
   if (!guide) throw new Error(`Ukjent guide-slug: ${slug}`);
   return guide;
+}
+
+/**
+ * Komplett Metadata for en guideside: tittel, beskrivelse, canonical og
+ * OpenGraph av typen article med publiserings-/endringsdato.
+ * OG-bildet plukkes automatisk opp fra opengraph-image.tsx i guidemappen.
+ */
+export function guidePageMetadata(slug: string): Metadata {
+  const guide = getGuide(slug);
+  return {
+    title: guide.title,
+    description: guide.description,
+    alternates: { canonical: `/guide/${guide.slug}` },
+    openGraph: {
+      type: "article",
+      title: guide.title,
+      description: guide.description,
+      url: `/guide/${guide.slug}`,
+      publishedTime: guide.datePublished,
+      modifiedTime: guide.dateModified ?? guide.datePublished,
+    },
+  };
 }
 
 export function formatGuideDate(isoDate: string): string {

@@ -308,7 +308,6 @@ export default function HomePage() {
     <>
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: jsonLdString(websiteJsonLd()) }}
       />
       <script
@@ -348,7 +347,7 @@ export default function HomePage() {
         </section>
 
         <section id="kalkulator" aria-label="Kalkulator" className="scroll-mt-20">
-          <Calculator urlSync shareActions />
+          <Calculator urlSync shareActions examplePresets />
         </section>
 
         <HowItWorks />

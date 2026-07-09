@@ -48,9 +48,9 @@ på hovedordet krever noen reelle lenker. Prioritert etter innsats/effekt:
 
 1. **Én ny guide per måned** mot long-tail-søk. Neste emner, i prioritert
    rekkefølge (velg fra søkeord folk faktisk bruker):
+   - ~~«Korttidsutleie og Airbnb: regler og skatt»~~ ✅ publisert 10. juli 2026
+   - ~~«Utleiemegler eller leie ut selv? Hva koster forvaltning»~~ ✅ publisert 10. juli 2026
    - «Depositum eller depositumsgaranti — hva bør utleier kreve?»
-   - «Korttidsutleie og Airbnb: regler og skatt»
-   - «Utleiemegler eller leie ut selv? Hva koster forvaltning»
    - «Førstegangsutleier: sjekkliste fra visning til innflytting»
    - «Fellesgjeld og felleskostnader: slik leser du en FINN-annonse»
    - «Serielån eller annuitetslån på utleiebolig?»

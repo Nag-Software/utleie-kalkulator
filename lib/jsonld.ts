@@ -104,6 +104,23 @@ export function articleJsonLd(article: {
   };
 }
 
+/** ItemList over alle guider – hjelper søkemotorer å forstå guideindeksen. */
+export function guideListJsonLd(
+  guides: { slug: string; title: string; description: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Guider om utleie og boliginvestering",
+    itemListElement: guides.map((guide, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: guide.title,
+      url: `${SITE_URL}/guide/${guide.slug}`,
+    })),
+  };
+}
+
 export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   return {
     "@context": "https://schema.org",

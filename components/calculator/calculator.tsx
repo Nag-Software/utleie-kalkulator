@@ -9,6 +9,7 @@ import { type CalcInput, DEFAULT_INPUT } from "@/lib/calc/schema";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { InputPanel } from "./input-panel";
+import { EXAMPLE_PRESETS } from "./presets";
 import { getVerdict, ResultsPanel } from "./results-panel";
 import {
   decodeInputFromParams,
@@ -35,6 +36,8 @@ export interface CalculatorProps {
   urlSync?: boolean;
   /** vis Del-knapp over inputene */
   shareActions?: boolean;
+  /** vis eksempel-scenarioer som fyller kalkulatoren med ett klikk */
+  examplePresets?: boolean;
   /** KI-vurdering (betalte beregninger) */
   aiPanel?: React.ReactNode;
   /** kalles debounced når brukeren endrer inputs */
@@ -45,6 +48,7 @@ export function Calculator({
   initialInput,
   urlSync = false,
   shareActions = false,
+  examplePresets = false,
   aiPanel,
   onInputChange,
 }: CalculatorProps) {
@@ -88,7 +92,9 @@ export function Calculator({
 
   // Meld fra om endringer (debounced)
   const onInputChangeRef = useRef(onInputChange);
-  onInputChangeRef.current = onInputChange;
+  useEffect(() => {
+    onInputChangeRef.current = onInputChange;
+  }, [onInputChange]);
   useEffect(() => {
     if (!onInputChangeRef.current || input === initialRef.current) return;
     const timeout = setTimeout(() => onInputChangeRef.current?.(input), 800);
@@ -113,6 +119,29 @@ export function Calculator({
 
   return (
     <div className="relative">
+      {examplePresets ? (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Prøv et eksempel:
+          </span>
+          {EXAMPLE_PRESETS.map((preset) => (
+            <Button
+              key={preset.label}
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => {
+                dispatch({ type: "replace", input: { ...preset.input } });
+                toast.success(
+                  `Eksempel lastet: ${preset.label}. Juster tallene fritt.`,
+                );
+              }}
+            >
+              {preset.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
         <div className="rounded-xl border bg-card px-4 py-2">
           {shareActions ? (

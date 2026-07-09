@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Accordion,
   AccordionContent,
@@ -14,9 +14,17 @@ import type { CalcResult } from "@/lib/calc/engine";
 import type { CalcInput } from "@/lib/calc/schema";
 import { formatNOK, formatNumber, formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { AmortizationChart } from "./amortization-chart";
+// Grafene (recharts) lastes først når resultatpanelet vises, så biblioteket
+// ikke ligger i førstelast-bundelen. ssr:false fordi recharts måler DOM.
+const AmortizationChart = dynamic(
+  () => import("./amortization-chart").then((m) => m.AmortizationChart),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> },
+);
+const ProjectionChart = dynamic(
+  () => import("./projection-chart").then((m) => m.ProjectionChart),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> },
+);
 import { DetailsTable } from "./details-table";
-import { ProjectionChart } from "./projection-chart";
 import { SensitivityTable } from "./sensitivity-table";
 
 export type Verdict = "positive" | "warning" | "negative";
@@ -138,10 +146,6 @@ export interface ResultsPanelProps {
 }
 
 export function ResultsPanel({ input, result, aiPanel }: ResultsPanelProps) {
-  // recharts måler DOM — vent til mount før rendring (SSR-trygt)
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   return (
     <div className="space-y-4" id="resultater">
       <VerdictBanner result={result} />
@@ -155,11 +159,7 @@ export function ResultsPanel({ input, result, aiPanel }: ResultsPanelProps) {
           <TabsTrigger value="sensitivitet">Sensitivitet</TabsTrigger>
         </TabsList>
         <TabsContent value="prognose" className="rounded-xl border bg-card p-4">
-          {mounted ? (
-            <ProjectionChart years={result.years} />
-          ) : (
-            <Skeleton className="h-72 w-full" />
-          )}
+          <ProjectionChart years={result.years} />
           <p className="mt-3 text-xs text-muted-foreground">
             Egenkapitalverdi = boligverdi − restgjeld − fellesgjeld. Akkumulert
             kontantstrøm er etter skatt.
@@ -170,10 +170,8 @@ export function ResultsPanel({ input, result, aiPanel }: ResultsPanelProps) {
             <p className="py-10 text-center text-sm text-muted-foreground">
               Ingen lånefinansiering med dagens egenkapital.
             </p>
-          ) : mounted ? (
-            <AmortizationChart years={result.years} />
           ) : (
-            <Skeleton className="h-72 w-full" />
+            <AmortizationChart years={result.years} />
           )}
         </TabsContent>
         <TabsContent value="sensitivitet" className="rounded-xl border bg-card p-4">

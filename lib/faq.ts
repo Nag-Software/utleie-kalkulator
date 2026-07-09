@@ -45,6 +45,11 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Sett opp alle inntekter og kostnader: leieinntekter minus lånekostnader, felleskostnader, kommunale avgifter, forsikring, vedlikehold, ledighet og skatt. Er kontantstrømmen positiv, betaler boligen for seg selv – i tillegg kommer nedbetaling av lån og eventuell verdistigning. Utleiekalkulatoren gjør hele regnestykket automatisk og viser kontantstrøm, yield, cash-on-cash og break-even.",
   },
   {
+    question: "Kan jeg leie ut via Airbnb i borettslag eller sameie?",
+    answer:
+      "Ja, men med grenser: i borettslag kan du korttidsutleie boligen i inntil 30 døgn per år uten styrets samtykke, og i eierseksjonssameier er grensen 90 døgn (vedtektene kan sette 60–120). Skattemessig er korttidsutleie av egen bolig skattefri opp til 10 000 kr i året; av det overskytende regnes 85 % som skattepliktig inntekt med 22 % skatt.",
+  },
+  {
     question: "Hva koster utleiekalkulatoren?",
     answer:
       "Kalkulatoren er gratis når du legger inn tallene selv, uten konto og uten begrensninger. Vil du hente tallene automatisk fra en FINN-annonse og få en objektiv KI-vurdering med sannsynlighet for lønnsomhet, koster det 9,90 kr per beregning. Feiler hentingen, refunderes beløpet automatisk.",

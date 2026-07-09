@@ -17,6 +17,8 @@
 - [Skatt på utleie 2026](https://utleie-kalkulator.no/guide/skatt-pa-utleie-2026): 22 %-regelen, fradrag, skattefri utleie i egen bolig
 - [Lån til utleiebolig](https://utleie-kalkulator.no/guide/egenkapital-og-lan-til-utleiebolig): 10 % egenkapitalkrav, utlånsforskriften, leieinntekter i lånesøknaden, borettslag-begrensninger
 - [Leie ut del av egen bolig](https://utleie-kalkulator.no/guide/leie-ut-del-av-egen-bolig): skattefri hybel/sokkel, krav til utleiedel, kontrakt og depositum
+- [Airbnb og korttidsutleie](https://utleie-kalkulator.no/guide/airbnb-og-korttidsutleie): 10 000-kronersgrensen, 85 %-regelen, 30/90-døgnsgrensene i borettslag og sameie, virksomhetsgrensen
+- [Utleiemegler eller leie ut selv?](https://utleie-kalkulator.no/guide/utleiemegler-eller-leie-ut-selv): pris på utleiemegling og forvaltning (8–12 % + mva), regneeksempler, sjekkliste
 - [Dokumentavgift og omkostninger](https://utleie-kalkulator.no/guide/dokumentavgift-og-omkostninger): 2,5 %-regelen, selveier vs. andel, gebyrer
 - [Om tjenesten](https://utleie-kalkulator.no/om), [vilkår](https://utleie-kalkulator.no/vilkar) og [personvern](https://utleie-kalkulator.no/personvern)
 

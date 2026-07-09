@@ -1,9 +1,19 @@
 import { ImageResponse } from "next/og";
 
-export const size = { width: 64, height: 64 };
-export const contentType = "image/png";
+// Genererer favicon + manifest-ikoner i flere størrelser (/icon/64 osv.)
+const SIZES = [64, 192, 512] as const;
 
-export default function Icon() {
+export function generateImageMetadata() {
+  return SIZES.map((size) => ({
+    id: String(size),
+    size: { width: size, height: size },
+    contentType: "image/png",
+  }));
+}
+
+// I Next 16 leveres id som en Promise
+export default async function Icon(props: { id: string | Promise<string> }) {
+  const size = Number(await props.id) || 64;
   return new ImageResponse(
     (
       <div
@@ -14,10 +24,10 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           background: "linear-gradient(135deg, #2563eb 0%, #1c3faf 100%)",
-          borderRadius: 14,
+          borderRadius: Math.round(size * 0.22),
         }}
       >
-        <svg viewBox="0 0 64 64" width="64" height="64">
+        <svg viewBox="0 0 64 64" width={size} height={size}>
           <path
             d="M14 27.5 L32 12 L50 27.5"
             fill="none"
@@ -45,6 +55,6 @@ export default function Icon() {
         </svg>
       </div>
     ),
-    { ...size },
+    { width: size, height: size },
   );
 }
