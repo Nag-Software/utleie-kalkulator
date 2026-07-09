@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Utleiekalkulator – beregn lønnsomhet på utleiebolig";
+export const alt = "Utleiekalkulator – gratis kalkulator for utleiebolig";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -72,7 +72,7 @@ export default function OpenGraphImage() {
           Lønner det seg å leie ut?
         </div>
         <div style={{ fontSize: "34px", marginTop: "28px", opacity: 0.85 }}>
-          Kontantstrøm · Yield · Break-even · KI-vurdering
+          Gratis utleiekalkulator · Kontantstrøm · Yield · Break-even
         </div>
       </div>
     ),

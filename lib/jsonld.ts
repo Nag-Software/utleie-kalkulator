@@ -1,13 +1,29 @@
 import type { FaqItem } from "@/lib/faq";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
+    alternateName: [
+      "Utleiekalkulator",
+      "Utleie kalkulator",
+      "utleie-kalkulator.no",
+    ],
     url: SITE_URL,
     inLanguage: "nb-NO",
+  };
+}
+
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Nag Software",
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo.svg`,
+    email: CONTACT_EMAIL,
   };
 }
 
@@ -22,6 +38,14 @@ export function webApplicationJsonLd() {
     inLanguage: "nb-NO",
     description:
       "Beregn kontantstrøm, yield og avkastning på utleiebolig. Gratis med manuelle tall; automatisk import fra FINN-annonse med KI-vurdering for 9,90 kr.",
+    featureList: [
+      "Kontantstrøm per måned etter skatt",
+      "Brutto og netto yield",
+      "Cash-on-cash-avkastning",
+      "Break-even-leie og break-even-rente",
+      "Flerårig prognose og amortisering",
+      "Import fra FINN-annonse med KI-vurdering",
+    ],
     offers: [
       {
         "@type": "Offer",
@@ -67,7 +91,15 @@ export function articleJsonLd(article: {
     datePublished: article.datePublished,
     dateModified: article.dateModified ?? article.datePublished,
     author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
-    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo.svg`,
+      },
+    },
     mainEntityOfPage: `${SITE_URL}/guide/${article.slug}`,
   };
 }

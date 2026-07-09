@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { type ArticleMeta, ArticleLayout } from "@/components/article-layout";
+import { ArticleLayout } from "@/components/article-layout";
+import { getGuide } from "@/lib/guides";
 
-const meta: ArticleMeta = {
-  slug: "skatt-pa-utleie-2026",
-  title: "Skatt på utleie 2026: satser, fradrag og skattefri utleie",
-  description:
-    "Når er leieinntekter skattefrie, hva kan du trekke fra, og hvordan beregnes skatten? Praktisk oversikt over skattereglene for boligutleie.",
-  datePublished: "2026-07-04",
-};
+const meta = getGuide("skatt-pa-utleie-2026");
 
 export const metadata: Metadata = {
   title: meta.title,

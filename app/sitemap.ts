@@ -1,21 +1,35 @@
 import type { MetadataRoute } from "next";
+import { GUIDES } from "@/lib/guides";
 import { SITE_URL } from "@/lib/site";
 
+// Stabile datoer (ikke build-tidspunkt) så Google ikke ser «endret» innhold
+// ved hver deploy uten reelle endringer.
+const STATIC_PAGES: {
+  path: string;
+  priority: number;
+  lastModified: string;
+  changeFrequency: "weekly" | "monthly" | "yearly";
+}[] = [
+  { path: "", priority: 1, lastModified: "2026-07-06", changeFrequency: "weekly" },
+  { path: "/guide", priority: 0.7, lastModified: "2026-07-06", changeFrequency: "monthly" },
+  { path: "/om", priority: 0.3, lastModified: "2026-07-06", changeFrequency: "yearly" },
+  { path: "/personvern", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },
+  { path: "/vilkar", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },
+];
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
-  const paths = [
-    { path: "", priority: 1 },
-    { path: "/guide", priority: 0.7 },
-    { path: "/guide/yield-utleiebolig", priority: 0.8 },
-    { path: "/guide/skatt-pa-utleie-2026", priority: 0.8 },
-    { path: "/guide/dokumentavgift-og-omkostninger", priority: 0.8 },
-    { path: "/personvern", priority: 0.2 },
-    { path: "/vilkar", priority: 0.2 },
+  return [
+    ...STATIC_PAGES.map(({ path, priority, lastModified, changeFrequency }) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: new Date(lastModified),
+      changeFrequency,
+      priority,
+    })),
+    ...GUIDES.map((guide) => ({
+      url: `${SITE_URL}/guide/${guide.slug}`,
+      lastModified: new Date(guide.dateModified ?? guide.datePublished),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
-  return paths.map(({ path, priority }) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified,
-    changeFrequency: path === "" ? "weekly" : "monthly",
-    priority,
-  }));
 }

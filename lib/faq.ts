@@ -35,6 +35,16 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Negativ kontantstrøm betyr at leieinntektene ikke dekker lånebetjening, driftskostnader og skatt – du må skyte inn penger hver måned. Investeringen kan likevel bli lønnsom totalt gjennom nedbetaling av lån og verdistigning, men du bærer risikoen og må tåle den månedlige belastningen. Kalkulatoren viser begge perspektivene.",
   },
   {
+    question: "Hvor mye egenkapital trenger jeg for å kjøpe utleiebolig?",
+    answer:
+      "Utlånsforskriften krever minst 10 % egenkapital ved kjøp av bolig, også sekundærbolig. I praksis vurderer banken hele økonomien din: samlet gjeld kan ikke overstige fem ganger brutto inntekt, og du må tåle en renteøkning på 3 prosentpoeng. Dokumenterte leieinntekter kan telle positivt i vurderingen. Bruk kalkulatoren til å se hvor høy rente økonomien tåler før du snakker med banken.",
+  },
+  {
+    question: "Hvordan regner jeg ut om utleie lønner seg?",
+    answer:
+      "Sett opp alle inntekter og kostnader: leieinntekter minus lånekostnader, felleskostnader, kommunale avgifter, forsikring, vedlikehold, ledighet og skatt. Er kontantstrømmen positiv, betaler boligen for seg selv – i tillegg kommer nedbetaling av lån og eventuell verdistigning. Utleiekalkulatoren gjør hele regnestykket automatisk og viser kontantstrøm, yield, cash-on-cash og break-even.",
+  },
+  {
     question: "Hva koster utleiekalkulatoren?",
     answer:
       "Kalkulatoren er gratis når du legger inn tallene selv, uten konto og uten begrensninger. Vil du hente tallene automatisk fra en FINN-annonse og få en objektiv KI-vurdering med sannsynlighet for lønnsomhet, koster det 9,90 kr per beregning. Feiler hentingen, refunderes beløpet automatisk.",

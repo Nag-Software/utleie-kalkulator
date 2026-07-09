@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { type ArticleMeta, ArticleLayout } from "@/components/article-layout";
+import { ArticleLayout } from "@/components/article-layout";
+import { getGuide } from "@/lib/guides";
 
-const meta: ArticleMeta = {
-  slug: "dokumentavgift-og-omkostninger",
-  title: "Dokumentavgift og omkostninger ved boligkjøp",
-  description:
-    "Selveier koster 2,5 % ekstra i dokumentavgift – borettslag slipper. Her er alle omkostningene ved boligkjøp, og hvorfor de betyr mye for utleieregnestykket.",
-  datePublished: "2026-07-04",
-};
+const meta = getGuide("dokumentavgift-og-omkostninger");
 
 export const metadata: Metadata = {
   title: meta.title,

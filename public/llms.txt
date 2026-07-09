@@ -11,10 +11,14 @@
 ## Viktige sider
 
 - [Kalkulatoren](https://utleie-kalkulator.no/): gratis utleiekalkulator med FINN-import
+- [Lønner det seg å kjøpe utleiebolig?](https://utleie-kalkulator.no/guide/lonner-det-seg-a-kjope-utleiebolig): regnestykket, gearing, kostnadene folk glemmer, utleie vs. fond
+- [Hva kan jeg leie ut for?](https://utleie-kalkulator.no/guide/hva-kan-jeg-leie-ut-for): markedsleie, FINN-metoden, SSB-statistikk, tomgangsmatematikk, KPI-justering
 - [Yield på utleiebolig](https://utleie-kalkulator.no/guide/yield-utleiebolig): brutto vs. netto yield, regneeksempler, typiske nivåer i norske byer
 - [Skatt på utleie 2026](https://utleie-kalkulator.no/guide/skatt-pa-utleie-2026): 22 %-regelen, fradrag, skattefri utleie i egen bolig
+- [Lån til utleiebolig](https://utleie-kalkulator.no/guide/egenkapital-og-lan-til-utleiebolig): 10 % egenkapitalkrav, utlånsforskriften, leieinntekter i lånesøknaden, borettslag-begrensninger
+- [Leie ut del av egen bolig](https://utleie-kalkulator.no/guide/leie-ut-del-av-egen-bolig): skattefri hybel/sokkel, krav til utleiedel, kontrakt og depositum
 - [Dokumentavgift og omkostninger](https://utleie-kalkulator.no/guide/dokumentavgift-og-omkostninger): 2,5 %-regelen, selveier vs. andel, gebyrer
-- [Vilkår](https://utleie-kalkulator.no/vilkar) og [personvern](https://utleie-kalkulator.no/personvern)
+- [Om tjenesten](https://utleie-kalkulator.no/om), [vilkår](https://utleie-kalkulator.no/vilkar) og [personvern](https://utleie-kalkulator.no/personvern)
 
 ## Fakta
 

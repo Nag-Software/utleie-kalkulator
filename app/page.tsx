@@ -12,6 +12,7 @@ import { Calculator } from "@/components/calculator/calculator";
 import { FinnImportDialog } from "@/components/calculator/finn-import-dialog";
 import { Button } from "@/components/ui/button";
 import { FAQ_ITEMS } from "@/lib/faq";
+import { GUIDES } from "@/lib/guides";
 import {
   faqJsonLd,
   jsonLdString,
@@ -24,26 +25,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const GUIDES = [
-  {
-    slug: "yield-utleiebolig",
-    title: "Yield på utleiebolig: slik regner du ut avkastningen",
-    description:
-      "Brutto vs. netto yield, regneeksempler og hva som regnes som god avkastning i 2026.",
-  },
-  {
-    slug: "skatt-pa-utleie-2026",
-    title: "Skatt på utleie 2026: satser, fradrag og skattefri utleie",
-    description:
-      "22 %-regelen, alle fradragene du kan kreve, og når utleie er helt skattefritt.",
-  },
-  {
-    slug: "dokumentavgift-og-omkostninger",
-    title: "Dokumentavgift og omkostninger ved boligkjøp",
-    description:
-      "Hvorfor selveier koster 2,5 % ekstra, hva andelsboliger slipper unna med, og alle gebyrene.",
-  },
-];
+const FEATURED_GUIDES = GUIDES.slice(0, 3);
 
 function HowItWorks() {
   const steps = [
@@ -170,6 +152,98 @@ function KeyFiguresExplained() {
   );
 }
 
+function AboutCalculator() {
+  return (
+    <section aria-labelledby="om-utleiekalkulator" className="py-14">
+      <h2
+        id="om-utleiekalkulator"
+        className="text-2xl font-bold tracking-tight"
+      >
+        Hva er en utleiekalkulator?
+      </h2>
+      <div className="mt-4 max-w-3xl space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p>
+          En utleiekalkulator er en kalkulator for utleie av bolig: den samler
+          alle tallene som avgjør om en utleiebolig lønner seg – kjøpesum,
+          lån, rente, leieinntekter, felleskostnader, vedlikehold, ledighet og
+          skatt – og regner ut hva som faktisk blir igjen til deg. I stedet
+          for å synse om «god investering» får du kontantstrøm per måned etter
+          skatt,{" "}
+          <Link
+            href="/guide/yield-utleiebolig"
+            className="text-primary hover:underline"
+          >
+            brutto og netto yield
+          </Link>
+          , cash-on-cash-avkastning og break-even, oppdatert live mens du
+          justerer forutsetningene.
+        </p>
+        <h3 className="pt-2 text-lg font-semibold text-foreground">
+          Hvem er kalkulatoren for?
+        </h3>
+        <p>
+          For deg som vurderer å{" "}
+          <Link
+            href="/guide/lonner-det-seg-a-kjope-utleiebolig"
+            className="text-primary hover:underline"
+          >
+            kjøpe bolig for utleie
+          </Link>{" "}
+          og vil regne på et konkret objekt før budrunden. For deg som skal{" "}
+          <Link
+            href="/guide/leie-ut-del-av-egen-bolig"
+            className="text-primary hover:underline"
+          >
+            leie ut hybel eller sokkelleilighet i egen bolig
+          </Link>{" "}
+          og lurer på hva det betyr for økonomien. Og for deg som allerede
+          eier en sekundærbolig og vil stressteste hva en renteøkning eller{" "}
+          <Link
+            href="/guide/hva-kan-jeg-leie-ut-for"
+            className="text-primary hover:underline"
+          >
+            en annen leiepris
+          </Link>{" "}
+          gjør med regnestykket.
+        </p>
+        <h3 className="pt-2 text-lg font-semibold text-foreground">
+          Forutsetningene styrer du selv
+        </h3>
+        <p>
+          Kalkulatoren starter med fornuftige standardverdier for det norske
+          markedet –{" "}
+          <Link
+            href="/guide/skatt-pa-utleie-2026"
+            className="text-primary hover:underline"
+          >
+            22 % skatt på netto leieinntekt
+          </Link>
+          , rentefradrag,{" "}
+          <Link
+            href="/guide/dokumentavgift-og-omkostninger"
+            className="text-primary hover:underline"
+          >
+            dokumentavgift på 2,5 % for selveier
+          </Link>{" "}
+          og normal ledighet – men alt kan justeres. Leier du ut skattefritt i
+          egen bolig, setter du skattesatsen til null. Velger du andelsbolig,
+          fjernes dokumentavgiften og fellesgjelden regnes inn i totalprisen.
+        </p>
+        <h3 className="pt-2 text-lg font-semibold text-foreground">
+          Gratis, uten konto – og tallene dine forblir dine
+        </h3>
+        <p>
+          Utleiekalkulatoren er gratis å bruke, krever ingen registrering og
+          lagrer ingenting: beregningen ligger i lenken, som du kan dele med
+          medinvestor, partner eller banken. Vil du slippe å taste inn tallene
+          selv, henter vi dem automatisk fra en FINN-annonse og gir deg en
+          objektiv KI-vurdering av lønnsomheten for {PRICE_NOK} kr.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function Faq() {
   return (
     <section aria-labelledby="faq" className="py-14">
@@ -210,7 +284,7 @@ function GuideTeasers() {
         </Link>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {GUIDES.map((guide) => (
+        {FEATURED_GUIDES.map((guide) => (
           <Link
             key={guide.slug}
             href={`/guide/${guide.slug}`}
@@ -252,7 +326,8 @@ export default function HomePage() {
             Utleiekalkulator
           </h1>
           <p className="mt-2 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Se på sekunder om en utleiebolig lønner seg.
+            Se på sekunder om en utleiebolig lønner seg: kontantstrøm, yield og
+            avkastning – gratis og uten konto.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
             <FinnImportDialog
@@ -279,6 +354,7 @@ export default function HomePage() {
         <HowItWorks />
         <FinnSection />
         <KeyFiguresExplained />
+        <AboutCalculator />
         <Faq />
         <GuideTeasers />
       </div>

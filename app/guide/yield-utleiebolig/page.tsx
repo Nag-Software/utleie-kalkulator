@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { type ArticleMeta, ArticleLayout } from "@/components/article-layout";
+import { ArticleLayout } from "@/components/article-layout";
+import { getGuide } from "@/lib/guides";
 
-const meta: ArticleMeta = {
-  slug: "yield-utleiebolig",
-  title: "Yield på utleiebolig: slik regner du ut avkastningen (2026)",
-  description:
-    "Yield er det viktigste nøkkeltallet for å sammenligne utleieboliger. Her lærer du forskjellen på brutto og netto yield, hvordan du regner dem ut, og hva som er et godt nivå.",
-  datePublished: "2026-07-04",
-};
+const meta = getGuide("yield-utleiebolig");
 
 export const metadata: Metadata = {
   title: meta.title,
