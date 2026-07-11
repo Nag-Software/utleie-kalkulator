@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
         destination: "https://utleie-kalkulator.no/:path*",
         permanent: true,
       },
+      // /sitemap uten filendelse → den faktiske sitemapen.
+      {
+        source: "/sitemap",
+        destination: "/sitemap.xml",
+        permanent: true,
+      },
     ];
   },
 };
