@@ -120,16 +120,15 @@ export function Calculator({
   return (
     <div className="relative">
       {examplePresets ? (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="mb-5 flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">
             Prøv et eksempel:
           </span>
           {EXAMPLE_PRESETS.map((preset) => (
-            <Button
+            <button
               key={preset.label}
-              variant="outline"
-              size="sm"
-              className="rounded-full"
+              type="button"
+              className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
               onClick={() => {
                 dispatch({ type: "replace", input: { ...preset.input } });
                 toast.success(
@@ -138,36 +137,37 @@ export function Calculator({
               }}
             >
               {preset.label}
-            </Button>
+            </button>
           ))}
         </div>
       ) : null}
-      <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
-        <div className="rounded-xl border bg-card px-4 py-2">
-          {shareActions ? (
-            <div className="flex gap-2 border-b py-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyShareLink}
-                className="flex-1"
-              >
-                <Share2 data-slot="icon" />
-                Del beregning
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
-                  toast.success("Kalkulatoren er nullstilt.");
-                }}
-              >
-                <RotateCcw data-slot="icon" />
-                Nullstill
-              </Button>
-            </div>
-          ) : null}
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
+        {/* Forutsetninger: mørk furugrønn panelflate */}
+        <div className="surface-panel dark rounded-3xl px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+          <div className="flex min-h-9 items-center justify-between gap-2">
+            <p className="eyebrow">Forutsetninger</p>
+            {shareActions ? (
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={copyShareLink}>
+                  <Share2 data-slot="icon" />
+                  Del
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Nullstill kalkulatoren"
+                  title="Nullstill"
+                  onClick={() => {
+                    dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
+                    toast.success("Kalkulatoren er nullstilt.");
+                  }}
+                >
+                  <RotateCcw />
+                </Button>
+              </div>
+            ) : null}
+          </div>
           <InputPanel
             input={input}
             result={result}
@@ -175,7 +175,7 @@ export function Calculator({
           />
         </div>
 
-        <div className="pb-16 lg:sticky lg:top-6 lg:pb-0">
+        <div className="pb-24 lg:sticky lg:top-20 lg:pb-0">
           <ResultsPanel input={input} result={result} aiPanel={aiPanel} />
         </div>
       </div>
@@ -183,15 +183,28 @@ export function Calculator({
       {/* Sticky oppsummering på mobil */}
       <a
         href="#resultater"
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t px-4 py-3 backdrop-blur lg:hidden",
-          verdict === "positive" && "border-positive/40 bg-positive/15",
-          verdict === "warning" && "border-warning bg-warning/20",
-          verdict === "negative" && "border-destructive/40 bg-destructive/10",
-        )}
+        className="surface-panel dark fixed inset-x-4 bottom-4 z-40 flex items-center justify-between gap-3 rounded-2xl border border-border px-5 py-3.5 shadow-lg shadow-black/20 lg:hidden"
       >
-        <span className="text-sm font-medium">Kontantstrøm/mnd</span>
-        <span className="font-mono text-base font-bold tabular-nums">
+        <span className="flex items-center gap-2.5 text-sm">
+          <span
+            aria-hidden
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              verdict === "positive" && "bg-positive",
+              verdict === "warning" && "bg-warning",
+              verdict === "negative" && "bg-destructive",
+            )}
+          />
+          Kontantstrøm/mnd
+        </span>
+        <span
+          className={cn(
+            "font-mono text-base font-bold tabular-nums",
+            verdict === "positive" && "text-positive",
+            verdict === "warning" && "text-warning",
+            verdict === "negative" && "text-destructive",
+          )}
+        >
           {result.monthlyCashflowAfterTax < 0 ? "−" : "+"}
           {formatNumber(Math.abs(Math.round(result.monthlyCashflowAfterTax)))} kr
         </span>

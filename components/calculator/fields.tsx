@@ -61,7 +61,7 @@ export function MoneyField({
           id={id}
           inputMode="numeric"
           autoComplete="off"
-          className="pr-9 font-mono tabular-nums"
+          className="h-9 pr-9 font-mono tabular-nums"
           value={draft ?? formatNumber(value)}
           onFocus={(e) => {
             setDraft(value === 0 ? "" : String(value));
@@ -134,7 +134,7 @@ export function NumberSliderField({
             id={id}
             inputMode="decimal"
             autoComplete="off"
-            className="pr-8 font-mono tabular-nums"
+            className="h-9 pr-8 font-mono tabular-nums"
             value={displayValue}
             onFocus={(e) => {
               setDraft(String(value).replace(".", ","));
@@ -185,7 +185,7 @@ export function SegmentedField<T extends string>({
       <div
         role="radiogroup"
         aria-label={label}
-        className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+        className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1"
       >
         {options.map((option) => (
           <button
@@ -195,7 +195,7 @@ export function SegmentedField<T extends string>({
             aria-checked={value === option.value}
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
               value === option.value
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",

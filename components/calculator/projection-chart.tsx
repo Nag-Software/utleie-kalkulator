@@ -15,11 +15,11 @@ import { formatCompact, formatNOK } from "@/lib/format";
 const chartConfig = {
   cumulativeCashflow: {
     label: "Akkumulert kontantstrøm",
-    color: "var(--chart-1)",
+    color: "var(--chart-2)",
   },
   equityValue: {
     label: "Egenkapitalverdi",
-    color: "var(--chart-2)",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 

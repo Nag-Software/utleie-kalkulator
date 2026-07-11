@@ -108,7 +108,10 @@ export function FinnImportDialog({
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button size="lg">
+          <Button
+            size="lg"
+            className="h-11 rounded-full bg-cta px-6 text-[15px] font-semibold text-cta-foreground hover:bg-cta/90"
+          >
             <Sparkles data-slot="icon" />
             Hent fra FINN-annonse
           </Button>
@@ -148,7 +151,7 @@ export function FinnImportDialog({
             </div>
             <Button
               type="submit"
-              className="w-full"
+              className="w-full rounded-full"
               disabled={phase === "previewing" || !url.trim()}
             >
               {phase === "previewing" ? (
@@ -163,7 +166,7 @@ export function FinnImportDialog({
 
         {(phase === "preview" || phase === "paying") && preview ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border p-3">
+            <div className="flex items-center gap-3 rounded-xl border p-3">
               {preview.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -218,7 +221,7 @@ export function FinnImportDialog({
                   </span>
                 </label>
                 <Button
-                  className="w-full"
+                  className="w-full rounded-full bg-cta font-semibold text-cta-foreground hover:bg-cta/90"
                   size="lg"
                   disabled={!consent || phase === "paying"}
                   onClick={() => void startCheckout()}

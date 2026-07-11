@@ -34,7 +34,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       className="w-full"
     >
       <AccordionItem value="kjop">
-        <AccordionTrigger className="text-sm font-semibold">Kjøp</AccordionTrigger>
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">Kjøp</AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">
           <MoneyField
             label="Kjøpesum / prisantydning"
@@ -108,7 +108,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       </AccordionItem>
 
       <AccordionItem value="finansiering">
-        <AccordionTrigger className="text-sm font-semibold">
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">
           Finansiering
         </AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">
@@ -131,7 +131,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
                     Math.round((result.totalProjectCost * pct) / 100 / 1000) * 1000,
                   )
                 }
-                className="rounded-md border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 {pct} %
               </button>
@@ -178,7 +178,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       </AccordionItem>
 
       <AccordionItem value="leie">
-        <AccordionTrigger className="text-sm font-semibold">
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">
           Leieinntekter
         </AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">
@@ -211,7 +211,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       </AccordionItem>
 
       <AccordionItem value="drift">
-        <AccordionTrigger className="text-sm font-semibold">
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">
           Driftskostnader
         </AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">
@@ -281,7 +281,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       </AccordionItem>
 
       <AccordionItem value="skatt">
-        <AccordionTrigger className="text-sm font-semibold">
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">
           Skatt
         </AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">
@@ -294,7 +294,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
             suffix="%"
             hint="22 % for skattepliktig utleie (2026). Sett 0 ved skattefri utleie i egen bolig."
           />
-          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border p-3">
             <div className="space-y-0.5">
               <Label htmlFor="interest-deduction" className="text-[13px]">
                 Rentefradrag
@@ -313,7 +313,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
       </AccordionItem>
 
       <AccordionItem value="marked" className="border-b-0">
-        <AccordionTrigger className="text-sm font-semibold">
+        <AccordionTrigger className="py-3.5 text-sm font-semibold hover:no-underline">
           Marked og prognose
         </AccordionTrigger>
         <AccordionContent className="space-y-4 pt-1">

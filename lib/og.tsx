@@ -19,14 +19,15 @@ function LogoMark({ size }: { size: number }) {
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: "12px",
-        background: "linear-gradient(135deg, #2563eb 0%, #1c3faf 100%)",
+        border: "2px solid rgba(247, 242, 230, 0.25)",
+        background: "#1d4636",
       }}
     >
-      <svg viewBox="0 0 64 64" width={size} height={size}>
+      <svg viewBox="0 0 64 64" width={size - 6} height={size - 6}>
         <path
           d="M14 27.5 L32 12 L50 27.5"
           fill="none"
-          stroke="#ffffff"
+          stroke="#f7f2e6"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -34,7 +35,7 @@ function LogoMark({ size }: { size: number }) {
         <path
           d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
           fill="none"
-          stroke="#ffffff"
+          stroke="#f7f2e6"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -42,7 +43,7 @@ function LogoMark({ size }: { size: number }) {
         <path
           d="M37.5 31.5 L44 31.5 L44 38"
           fill="none"
-          stroke="#ffffff"
+          stroke="#f7f2e6"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -64,15 +65,26 @@ export function guideOgImage(title: string) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background:
-            "linear-gradient(135deg, #0c1a3d 0%, #12306e 40%, #1e5eff 130%)",
-          color: "#ffffff",
+          background: "linear-gradient(160deg, #1d4636 0%, #16382c 100%)",
+          color: "#f7f2e6",
           fontFamily: "sans-serif",
+          position: "relative",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            right: "-140px",
+            bottom: "-160px",
+            width: "440px",
+            height: "440px",
+            borderRadius: "9999px",
+            background: "rgba(247, 242, 230, 0.06)",
+          }}
+        />
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <LogoMark size={48} />
-          <div style={{ fontSize: "28px", opacity: 0.9 }}>
+          <div style={{ fontSize: "28px", opacity: 0.85 }}>
             utleie-kalkulator.no
           </div>
           <div
@@ -80,9 +92,9 @@ export function guideOgImage(title: string) {
               marginLeft: "8px",
               padding: "6px 18px",
               borderRadius: "999px",
-              border: "2px solid rgba(255,255,255,0.35)",
+              border: "2px solid #e2582a",
+              color: "#f7f2e6",
               fontSize: "22px",
-              opacity: 0.9,
             }}
           >
             Guide
@@ -91,14 +103,15 @@ export function guideOgImage(title: string) {
         <div
           style={{
             fontSize: `${titleFontSize}px`,
-            fontWeight: 800,
-            lineHeight: 1.15,
+            fontWeight: 700,
+            lineHeight: 1.12,
+            letterSpacing: "-1px",
             maxWidth: "1000px",
           }}
         >
           {title}
         </div>
-        <div style={{ fontSize: "28px", opacity: 0.85 }}>
+        <div style={{ fontSize: "28px", opacity: 0.8 }}>
           Gratis utleiekalkulator · Kontantstrøm · Yield · Skatt
         </div>
       </div>

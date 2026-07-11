@@ -9,17 +9,11 @@ export function Logo({ className }: { className?: string }) {
       aria-hidden
       className={cn("shrink-0", className)}
     >
-      <defs>
-        <linearGradient id="uk-logo-bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#2563eb" />
-          <stop offset="1" stopColor="#1c3faf" />
-        </linearGradient>
-      </defs>
-      <rect width="64" height="64" rx="14" fill="url(#uk-logo-bg)" />
+      <rect width="64" height="64" rx="16" fill="#1d4636" />
       <path
         d="M14 27.5 L32 12 L50 27.5"
         fill="none"
-        stroke="#ffffff"
+        stroke="#f7f2e6"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -27,7 +21,7 @@ export function Logo({ className }: { className?: string }) {
       <path
         d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
         fill="none"
-        stroke="#ffffff"
+        stroke="#f7f2e6"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -35,7 +29,7 @@ export function Logo({ className }: { className?: string }) {
       <path
         d="M37.5 31.5 L44 31.5 L44 38"
         fill="none"
-        stroke="#ffffff"
+        stroke="#f7f2e6"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"

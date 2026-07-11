@@ -1,6 +1,6 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Toaster } from "@/components/ui/sonner";
@@ -16,6 +16,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  axes: ["opsz"],
+  display: "swap",
 });
 
 const googleSiteVerification =
@@ -56,8 +63,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#f7f3ea",
 };
+
+const FOOTER_GUIDES: { slug: string; label: string }[] = [
+  { slug: "lonner-det-seg-a-kjope-utleiebolig", label: "Lønner utleie seg?" },
+  { slug: "hva-kan-jeg-leie-ut-for", label: "Hva kan jeg leie ut for?" },
+  { slug: "yield-utleiebolig", label: "Yield på utleiebolig" },
+  { slug: "skatt-pa-utleie-2026", label: "Skatt på utleie" },
+];
 
 export default function RootLayout({
   children,
@@ -67,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="nb"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <a
@@ -82,18 +96,30 @@ export default function RootLayout({
             __html: jsonLdString(organizationJsonLd()),
           }}
         />
-        <header className="border-b bg-card">
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <Logo className="size-7" />
+        <header className="sticky top-0 z-50 border-b border-border/60 bg-background">
+          <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight"
+            >
+              <Logo className="size-8" />
               {SITE_NAME}
             </Link>
-            <nav className="flex items-center gap-5 text-sm text-muted-foreground">
+            <nav className="flex items-center gap-6 text-sm text-muted-foreground sm:gap-8">
               <Link href="/" className="transition-colors hover:text-foreground">
                 Kalkulator
               </Link>
-              <Link href="/guide" className="transition-colors hover:text-foreground">
+              <Link
+                href="/guide"
+                className="transition-colors hover:text-foreground"
+              >
                 Guider
+              </Link>
+              <Link
+                href="/om"
+                className="hidden transition-colors hover:text-foreground sm:block"
+              >
+                Om
               </Link>
             </nav>
           </div>
@@ -101,50 +127,90 @@ export default function RootLayout({
         <main id="innhold" className="flex-1">
           {children}
         </main>
-        <footer className="border-t bg-card">
-          <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-8 text-sm text-muted-foreground">
-            <nav className="flex flex-wrap gap-x-5 gap-y-2">
-              <Link href="/guide" className="hover:text-foreground">
-                Guider
-              </Link>
-              <Link
-                href="/guide/lonner-det-seg-a-kjope-utleiebolig"
-                className="hover:text-foreground"
-              >
-                Lønner utleie seg?
-              </Link>
-              <Link
-                href="/guide/hva-kan-jeg-leie-ut-for"
-                className="hover:text-foreground"
-              >
-                Hva kan jeg leie ut for?
-              </Link>
-              <Link href="/guide/yield-utleiebolig" className="hover:text-foreground">
-                Yield på utleiebolig
-              </Link>
-              <Link href="/guide/skatt-pa-utleie-2026" className="hover:text-foreground">
-                Skatt på utleie
-              </Link>
-              <Link href="/om" className="hover:text-foreground">
-                Om kalkulatoren
-              </Link>
-              <Link href="/personvern" className="hover:text-foreground">
-                Personvern
-              </Link>
-              <Link href="/vilkar" className="hover:text-foreground">
-                Vilkår
-              </Link>
-            </nav>
-            <p>
-              Kalkulatoren er et hjelpemiddel og gir ikke finansiell rådgivning.
-              Tallene er estimater basert på forutsetningene du selv legger inn.
-            </p>
-            <p>
-              © {new Date().getFullYear()} Nag Software · utleie-kalkulator.no ·{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-foreground">
-                {CONTACT_EMAIL}
-              </a>
-            </p>
+        <footer className="mt-24 border-t border-border/70">
+          <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6">
+            <div className="grid grid-cols-1 gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
+              <div>
+                <Link
+                  href="/"
+                  className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight"
+                >
+                  <Logo className="size-8" />
+                  {SITE_NAME}
+                </Link>
+                <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                  Se om utleieboligen lønner seg: kontantstrøm, yield og
+                  avkastning – gratis og uten konto.
+                </p>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="mt-4 inline-block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {CONTACT_EMAIL}
+                </a>
+              </div>
+              <nav aria-label="Guider" className="text-sm">
+                <p className="eyebrow">Guider</p>
+                <ul className="mt-4 space-y-2.5">
+                  {FOOTER_GUIDES.map((guide) => (
+                    <li key={guide.slug}>
+                      <Link
+                        href={`/guide/${guide.slug}`}
+                        className="text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {guide.label}
+                      </Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Link
+                      href="/guide"
+                      className="font-medium text-foreground underline-offset-4 hover:underline"
+                    >
+                      Alle guider →
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+              <nav aria-label="Om og vilkår" className="text-sm">
+                <p className="eyebrow">Nettstedet</p>
+                <ul className="mt-4 space-y-2.5">
+                  <li>
+                    <Link
+                      href="/om"
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Om kalkulatoren
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/personvern"
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Personvern
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/vilkar"
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Vilkår
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+            <div className="mt-12 flex flex-col gap-3 border-t border-border/70 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                © {new Date().getFullYear()} Nag Software · utleie-kalkulator.no
+              </p>
+              <p className="max-w-md">
+                Kalkulatoren er et hjelpemiddel og gir ikke finansiell
+                rådgivning. Tallene er estimater basert på dine forutsetninger.
+              </p>
+            </div>
           </div>
         </footer>
         <Toaster />

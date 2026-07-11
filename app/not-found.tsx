@@ -4,34 +4,43 @@ import { GUIDES } from "@/lib/guides";
 
 export default function NotFound() {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-16 text-center">
-      <p className="font-mono text-sm text-muted-foreground">404</p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight">
+    <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-20 text-center sm:px-6">
+      <p className="eyebrow">404</p>
+      <h1 className="font-display mt-3 text-4xl font-semibold sm:text-5xl">
         Siden finnes ikke
       </h1>
-      <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+      <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted-foreground">
         Lenken kan være feilstavet eller utdatert. Kalkulatoren og guidene
         finner du her:
       </p>
-      <Button asChild className="mt-6">
+      <Button
+        asChild
+        size="lg"
+        className="mt-7 h-11 rounded-full px-6 text-[15px] font-semibold"
+      >
         <Link href="/">Til utleiekalkulatoren</Link>
       </Button>
-      <div className="mt-10 text-left">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          Populære guider
-        </h2>
-        <ul className="mt-3 space-y-2 text-sm">
+      <div className="mt-14 text-left">
+        <p className="eyebrow">Populære guider</p>
+        <div className="mt-4 divide-y divide-border border-t border-border">
           {GUIDES.slice(0, 4).map((guide) => (
-            <li key={guide.slug}>
-              <Link
-                href={`/guide/${guide.slug}`}
-                className="text-primary hover:underline"
-              >
+            <Link
+              key={guide.slug}
+              href={`/guide/${guide.slug}`}
+              className="group flex items-center justify-between gap-6 py-4"
+            >
+              <span className="text-sm font-medium underline-offset-4 group-hover:underline">
                 {guide.title}
-              </Link>
-            </li>
+              </span>
+              <span
+                aria-hidden
+                className="text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground"
+              >
+                →
+              </span>
+            </Link>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );

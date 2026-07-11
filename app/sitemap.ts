@@ -11,7 +11,7 @@ const STATIC_PAGES: {
   changeFrequency: "weekly" | "monthly" | "yearly";
 }[] = [
   { path: "", priority: 1, lastModified: "2026-07-10", changeFrequency: "weekly" },
-  { path: "/guide", priority: 0.7, lastModified: "2026-07-10", changeFrequency: "monthly" },
+  { path: "/guide", priority: 0.7, lastModified: "2026-07-11", changeFrequency: "weekly" },
   { path: "/om", priority: 0.3, lastModified: "2026-07-06", changeFrequency: "yearly" },
   { path: "/personvern", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },
   { path: "/vilkar", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },

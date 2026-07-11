@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default function PersonvernPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-8">
+    <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
       <article className="article">
-        <h1 className="text-3xl font-bold tracking-tight">Personvernerklæring</h1>
+        <h1 className="font-display text-4xl font-semibold">Personvernerklæring</h1>
         <p className="mt-3">
           Behandlingsansvarlig: Nag Software (kontakt:{" "}
           <a href="mailto:casper@nagsoftware.no">casper@nagsoftware.no</a>).

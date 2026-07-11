@@ -23,15 +23,15 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #2563eb 0%, #1c3faf 100%)",
-          borderRadius: Math.round(size * 0.22),
+          background: "#1d4636",
+          borderRadius: Math.round(size * 0.25),
         }}
       >
         <svg viewBox="0 0 64 64" width={size} height={size}>
           <path
             d="M14 27.5 L32 12 L50 27.5"
             fill="none"
-            stroke="#ffffff"
+            stroke="#f7f2e6"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -39,7 +39,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           <path
             d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
             fill="none"
-            stroke="#ffffff"
+            stroke="#f7f2e6"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -47,7 +47,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           <path
             d="M37.5 31.5 L44 31.5 L44 38"
             fill="none"
-            stroke="#ffffff"
+            stroke="#f7f2e6"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"

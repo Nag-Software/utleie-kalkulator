@@ -1,47 +1,34 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { GuideDirectory } from "@/components/guide-directory";
 import { GUIDES } from "@/lib/guides";
 import { guideListJsonLd, jsonLdString } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
-  title: "Guider om utleie, yield og skatt",
+  title: "Guider om utleie, skatt, lån og avkastning",
   description:
-    "Lær å vurdere utleieboliger: lønnsomhet, riktig leiepris, yield, skatt på leieinntekter, lån og omkostninger. Praktiske guider for det norske markedet.",
+    "Alle guidene våre om utleiebolig: lønnsomhet, yield, skatt og fradrag, lån, husleieloven, depositum, leiepriser og mer. Søk eller bla etter kategori.",
   alternates: { canonical: "/guide" },
 };
 
 export default function GuideIndexPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-10">
+    <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6 sm:pt-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdString(guideListJsonLd(GUIDES)),
         }}
       />
-      <h1 className="text-3xl font-bold tracking-tight">
+      <p className="eyebrow">Guider</p>
+      <h1 className="font-display mt-3 text-4xl font-semibold sm:text-5xl">
         Guider om utleie og boliginvestering
       </h1>
-      <p className="mt-3 text-lg text-muted-foreground">
-        Korte, praktiske guider som hjelper deg å vurdere om en utleiebolig er
-        en god investering – skrevet for det norske markedet.
+      <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
+        {GUIDES.length} korte, praktiske guider som hjelper deg å vurdere,
+        finansiere og drive utleiebolig i Norge – fra første regnestykke til
+        skattemeldingen.
       </p>
-      <div className="mt-8 space-y-4">
-        {GUIDES.map((guide) => (
-          <Link
-            key={guide.slug}
-            href={`/guide/${guide.slug}`}
-            className="group block rounded-xl border bg-card p-6 transition-colors hover:border-primary/50"
-          >
-            <h2 className="text-lg font-semibold group-hover:text-primary">
-              {guide.title}
-            </h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {guide.description}
-            </p>
-          </Link>
-        ))}
-      </div>
+      <GuideDirectory guides={GUIDES} />
     </div>
   );
 }

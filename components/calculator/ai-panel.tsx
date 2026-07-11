@@ -113,7 +113,7 @@ export function AiPanel({
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="size-4 text-primary" />
+          <Sparkles className="size-4 text-cta" />
           KI-vurdering
         </CardTitle>
         {assessment && canRerun ? (

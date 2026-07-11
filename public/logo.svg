@@ -1,12 +1,6 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Utleie-kalkulator">
-  <defs>
-    <linearGradient id="uk-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#1c3faf"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="url(#uk-bg)"/>
-  <path d="M14 27.5 L32 12 L50 27.5" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M37.5 31.5 L44 31.5 L44 38" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="64" height="64" rx="16" fill="#1d4636"/>
+  <path d="M14 27.5 L32 12 L50 27.5" fill="none" stroke="#f7f2e6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5" fill="none" stroke="#f7f2e6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M37.5 31.5 L44 31.5 L44 38" fill="none" stroke="#f7f2e6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

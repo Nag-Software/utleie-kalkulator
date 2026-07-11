@@ -15,11 +15,34 @@ export default function OpenGraphImage() {
           flexDirection: "column",
           justifyContent: "center",
           padding: "80px",
-          background: "linear-gradient(135deg, #0c1a3d 0%, #12306e 40%, #1e5eff 130%)",
-          color: "#ffffff",
+          background: "linear-gradient(160deg, #1d4636 0%, #16382c 100%)",
+          color: "#f7f2e6",
           fontFamily: "sans-serif",
+          position: "relative",
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            right: "-140px",
+            top: "-140px",
+            width: "420px",
+            height: "420px",
+            borderRadius: "9999px",
+            background: "rgba(247, 242, 230, 0.06)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            right: "96px",
+            bottom: "88px",
+            width: "56px",
+            height: "56px",
+            borderRadius: "9999px",
+            background: "#e2582a",
+          }}
+        />
         <div
           style={{
             display: "flex",
@@ -35,15 +58,16 @@ export default function OpenGraphImage() {
               justifyContent: "center",
               width: "56px",
               height: "56px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #2563eb 0%, #1c3faf 100%)",
+              borderRadius: "14px",
+              border: "2px solid rgba(247, 242, 230, 0.25)",
+              background: "#1d4636",
             }}
           >
-            <svg viewBox="0 0 64 64" width="56" height="56">
+            <svg viewBox="0 0 64 64" width="52" height="52">
               <path
                 d="M14 27.5 L32 12 L50 27.5"
                 fill="none"
-                stroke="#ffffff"
+                stroke="#f7f2e6"
                 strokeWidth="5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -51,7 +75,7 @@ export default function OpenGraphImage() {
               <path
                 d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
                 fill="none"
-                stroke="#ffffff"
+                stroke="#f7f2e6"
                 strokeWidth="5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -59,19 +83,29 @@ export default function OpenGraphImage() {
               <path
                 d="M37.5 31.5 L44 31.5 L44 38"
                 fill="none"
-                stroke="#ffffff"
+                stroke="#f7f2e6"
                 strokeWidth="5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           </div>
-          <div style={{ fontSize: "30px", opacity: 0.9 }}>utleie-kalkulator.no</div>
+          <div style={{ fontSize: "30px", opacity: 0.85 }}>
+            utleie-kalkulator.no
+          </div>
         </div>
-        <div style={{ fontSize: "72px", fontWeight: 800, lineHeight: 1.1 }}>
+        <div
+          style={{
+            fontSize: "76px",
+            fontWeight: 700,
+            lineHeight: 1.08,
+            letterSpacing: "-2px",
+            maxWidth: "900px",
+          }}
+        >
           Lønner det seg å leie ut?
         </div>
-        <div style={{ fontSize: "34px", marginTop: "28px", opacity: 0.85 }}>
+        <div style={{ fontSize: "32px", marginTop: "28px", opacity: 0.8 }}>
           Gratis utleiekalkulator · Kontantstrøm · Yield · Break-even
         </div>
       </div>
