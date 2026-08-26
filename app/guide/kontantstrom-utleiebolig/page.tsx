@@ -197,7 +197,7 @@ export default function Page() {
         inn kjøpesum, leie, lån og kostnader, så får du kontantstrøm etter
         skatt, break-even-leie og prognose år for år – gratis og uten konto.
         Har du funnet en bolig på FINN, kan du importere annonsen og få
-        feltene forhåndsutfylt med en KI-vurdering for 9,90 kr.
+        feltene forhåndsutfylt for 9,90 kr.
       </p>
     </ArticleLayout>
   );

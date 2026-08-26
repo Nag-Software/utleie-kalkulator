@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Merkemerket: hus med stigende trendpil. Kilde: public/logo.svg */
+/** Merkemerket: hus med stigende trendpil på oransje flate. */
 export function Logo({ className }: { className?: string }) {
   return (
     <svg
@@ -9,11 +9,11 @@ export function Logo({ className }: { className?: string }) {
       aria-hidden
       className={cn("shrink-0", className)}
     >
-      <rect width="64" height="64" rx="16" fill="#1d4636" />
+      <rect width="64" height="64" rx="16" fill="#ff5d30" />
       <path
         d="M14 27.5 L32 12 L50 27.5"
         fill="none"
-        stroke="#f7f2e6"
+        stroke="#ffffff"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -21,7 +21,7 @@ export function Logo({ className }: { className?: string }) {
       <path
         d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
         fill="none"
-        stroke="#f7f2e6"
+        stroke="#ffffff"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -29,7 +29,7 @@ export function Logo({ className }: { className?: string }) {
       <path
         d="M37.5 31.5 L44 31.5 L44 38"
         fill="none"
-        stroke="#f7f2e6"
+        stroke="#ffffff"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"

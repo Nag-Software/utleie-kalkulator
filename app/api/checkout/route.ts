@@ -19,7 +19,7 @@ const bodySchema = z.object({
 export async function POST(request: Request) {
   const config = getConfig();
   const stripe = getStripe();
-  if (!config.features.payments || !stripe) return paymentsUnavailable();
+  if (!config.features.payments) return paymentsUnavailable();
 
   const { allowed } = await checkRateLimit(request, "checkout", 5, 600);
   if (!allowed) return tooManyRequests();
@@ -37,6 +37,14 @@ export async function POST(request: Request) {
   }
   const { finnkode } = parsed.data;
 
+  // dev-bypass (localhost): hopp over Stripe og gå rett til beregningen
+  if (config.devBypassPayments) {
+    return NextResponse.json({
+      checkoutUrl: `${config.siteUrl}/beregning?session_id=dev_${finnkode}`,
+    });
+  }
+  if (!stripe) return paymentsUnavailable();
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -48,8 +56,8 @@ export async function POST(request: Request) {
             currency: "nok",
             unit_amount: PRICE_ORE,
             product_data: {
-              name: "FINN-beregning med KI-vurdering",
-              description: `Automatisk utfylt lønnsomhetsberegning for FINN-kode ${finnkode}, inkludert objektiv KI-vurdering.`,
+              name: "FINN-beregning",
+              description: `Automatisk utfylt lønnsomhetsberegning for FINN-kode ${finnkode}.`,
             },
           },
         },

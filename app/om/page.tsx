@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CONTACT_EMAIL } from "@/lib/site";
+import { COMPANY, CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Om utleiekalkulatoren",
@@ -13,7 +13,7 @@ export default function OmPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
       <article className="article">
-        <h1 className="font-display text-4xl font-semibold">
+        <h1 className="display text-[clamp(2rem,5vw,2.75rem)]">
           Om utleie-kalkulator.no
         </h1>
         <p className="mt-3 text-lg text-muted-foreground">
@@ -62,10 +62,31 @@ export default function OmPage() {
 
         <h2>Hvem står bak</h2>
         <p>
-          Tjenesten er laget og drives av <strong>Nag Software</strong>.
-          Spørsmål, feil eller forslag? Send en e-post til{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> – alle
-          henvendelser leses.
+          Merkevaren og nettstedet utleie-kalkulator.no eies og drives av{" "}
+          <strong>{COMPANY.legalName}</strong>, et{" "}
+          {COMPANY.legalForm.toLowerCase()} registrert i Enhetsregisteret.
+        </p>
+        <ul>
+          <li>
+            Organisasjonsnummer:{" "}
+            <strong>{COMPANY.organizationNumberFormatted}</strong>
+          </li>
+          <li>
+            Forretningsadresse: {COMPANY.street}, {COMPANY.postalCode}{" "}
+            {COMPANY.city}, {COMPANY.country}
+          </li>
+          <li>
+            Telefon:{" "}
+            <a href={`tel:${COMPANY.phone}`}>{COMPANY.phoneFormatted}</a>{" "}
+            (hverdager kl. 09–16)
+          </li>
+          <li>
+            E-post: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          </li>
+        </ul>
+        <p>
+          Spørsmål, feil eller forslag? Alle henvendelser leses – se{" "}
+          <Link href="/kontakt">kontaktsiden</Link> for hvordan du når oss.
         </p>
 
         <h2>Oppdateringer og kvalitet</h2>
@@ -81,7 +102,7 @@ export default function OmPage() {
           Kalkulatoren er et hjelpemiddel. Tallene er estimater basert på
           forutsetningene du selv legger inn, og erstatter ikke rådgivning
           tilpasset din situasjon. Se også{" "}
-          <Link href="/vilkar">vilkårene</Link> og{" "}
+          <Link href="/vilkar">salgsvilkårene</Link> og{" "}
           <Link href="/personvern">personvernerklæringen</Link>.
         </p>
       </article>

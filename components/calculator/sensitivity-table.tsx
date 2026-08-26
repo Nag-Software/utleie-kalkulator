@@ -56,7 +56,7 @@ export function SensitivityTable({ sensitivity, baseRate }: SensitivityTableProp
                       <TableCell
                         key={factor}
                         className={cn(
-                          "text-right font-mono tabular-nums",
+                          "text-right tabular-nums",
                           value >= 0
                             ? "bg-positive/10 text-positive"
                             : "bg-destructive/10 text-destructive",

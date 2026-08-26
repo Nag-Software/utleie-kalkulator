@@ -52,11 +52,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Hva koster utleiekalkulatoren?",
     answer:
-      "Kalkulatoren er gratis når du legger inn tallene selv, uten konto og uten begrensninger. Vil du hente tallene automatisk fra en FINN-annonse og få en objektiv KI-vurdering med sannsynlighet for lønnsomhet, koster det 9,90 kr per beregning. Feiler hentingen, refunderes beløpet automatisk.",
+      "Kalkulatoren er gratis når du legger inn tallene selv, uten konto og uten begrensninger. Vil du hente tallene automatisk fra en FINN-annonse, koster det 9,90 kr per beregning. Feiler hentingen, refunderes beløpet automatisk.",
   },
   {
     question: "Lagres tallene mine?",
     answer:
-      "Nei. Kalkulatoren kjører i nettleseren din, og deling skjer ved at tallene legges i lenken – vi har ingen database. Kjøper du en FINN-beregning, lagres boligtallene og KI-vurderingen sammen med betalingen hos Stripe, og lenken din er nøkkelen til beregningen.",
+      "Nei. Kalkulatoren kjører i nettleseren din, og deling skjer ved at tallene legges i lenken – vi har ingen database. Kjøper du en FINN-beregning, lagres boligtallene sammen med betalingen hos Stripe, og lenken din er nøkkelen til beregningen.",
   },
 ];

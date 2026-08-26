@@ -23,27 +23,27 @@ export function DetailsTable({ result }: { result: CalcResult }) {
       <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
         <div>
           <dt className="text-muted-foreground">Totalpris (inkl. fellesgjeld)</dt>
-          <dd className="font-mono tabular-nums">{formatNOK(result.totalPropertyCost)}</dd>
+          <dd className="tabular-nums">{formatNOK(result.totalPropertyCost)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Totalt prosjekt (m/omkostninger)</dt>
-          <dd className="font-mono tabular-nums">{formatNOK(result.totalProjectCost)}</dd>
+          <dd className="tabular-nums">{formatNOK(result.totalProjectCost)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Lånebeløp</dt>
-          <dd className="font-mono tabular-nums">{formatNOK(result.loanAmount)}</dd>
+          <dd className="tabular-nums">{formatNOK(result.loanAmount)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Terminbeløp første måned</dt>
-          <dd className="font-mono tabular-nums">{formatNOK(result.monthlyPayment)}</dd>
+          <dd className="tabular-nums">{formatNOK(result.monthlyPayment)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Driftskostnader per måned</dt>
-          <dd className="font-mono tabular-nums">{formatNOK(result.monthlyOpex)}</dd>
+          <dd className="tabular-nums">{formatNOK(result.monthlyOpex)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Belåningsgrad</dt>
-          <dd className="font-mono tabular-nums">
+          <dd className="tabular-nums">
             {result.ltvPct !== null ? `${result.ltvPct.toFixed(1).replace(".", ",")} %` : "–"}
           </dd>
         </div>
@@ -68,33 +68,33 @@ export function DetailsTable({ result }: { result: CalcResult }) {
             {result.years.map((y) => (
               <TableRow key={y.year}>
                 <TableCell className="font-medium">{y.year}</TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.effectiveRent)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.opex)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.interestPaid)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.principalPaid)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.tax)}
                 </TableCell>
                 <TableCell
                   className={cn(
-                    "text-right font-mono font-medium tabular-nums",
+                    "text-right font-medium tabular-nums",
                     y.cashflowAfterTax >= 0 ? "text-positive" : "text-destructive",
                   )}
                 >
                   {money(y.cashflowAfterTax)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.loanBalance)}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
+                <TableCell className="text-right tabular-nums">
                   {money(y.propertyValue)}
                 </TableCell>
               </TableRow>

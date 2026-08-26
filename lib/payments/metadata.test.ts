@@ -52,10 +52,4 @@ describe("parsePaidMetadata", () => {
       refunded: false,
     });
   });
-
-  it("leser ai_runs og hash", () => {
-    const parsed = parsePaidMetadata({ ai_runs: "2", inputs_hash: "abc" });
-    expect(parsed.aiRuns).toBe(2);
-    expect(parsed.inputsHash).toBe("abc");
-  });
 });

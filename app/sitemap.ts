@@ -12,9 +12,10 @@ const STATIC_PAGES: {
 }[] = [
   { path: "", priority: 1, lastModified: "2026-07-11", changeFrequency: "weekly" },
   { path: "/guide", priority: 0.7, lastModified: "2026-07-11", changeFrequency: "weekly" },
-  { path: "/om", priority: 0.3, lastModified: "2026-07-06", changeFrequency: "yearly" },
-  { path: "/personvern", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },
-  { path: "/vilkar", priority: 0.2, lastModified: "2026-07-04", changeFrequency: "yearly" },
+  { path: "/om", priority: 0.3, lastModified: "2026-08-26", changeFrequency: "yearly" },
+  { path: "/kontakt", priority: 0.3, lastModified: "2026-08-26", changeFrequency: "yearly" },
+  { path: "/personvern", priority: 0.2, lastModified: "2026-08-26", changeFrequency: "yearly" },
+  { path: "/vilkar", priority: 0.2, lastModified: "2026-08-26", changeFrequency: "yearly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

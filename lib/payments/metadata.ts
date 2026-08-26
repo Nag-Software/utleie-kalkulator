@@ -1,4 +1,3 @@
-import type { StoredAiAssessment } from "@/lib/ai/types";
 import type { FinnParsedData } from "@/lib/finn/types";
 
 /**
@@ -66,9 +65,6 @@ export type PaidState =
 export interface PaidCalculation {
   state: PaidState;
   finn: StoredFinn | null;
-  ai: StoredAiAssessment | null;
-  aiRuns: number;
-  inputsHash: string | null;
 }
 
 export function parsePaidMetadata(
@@ -90,8 +86,5 @@ export function parsePaidMetadata(
   return {
     state,
     finn: readChunked<StoredFinn>(metadata, "finn"),
-    ai: readChunked<StoredAiAssessment>(metadata, "ai"),
-    aiRuns: Number(metadata.ai_runs ?? 0) || 0,
-    inputsHash: metadata.inputs_hash ?? null,
   };
 }

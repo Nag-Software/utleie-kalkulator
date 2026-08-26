@@ -38,8 +38,6 @@ export interface CalculatorProps {
   shareActions?: boolean;
   /** vis eksempel-scenarioer som fyller kalkulatoren med ett klikk */
   examplePresets?: boolean;
-  /** KI-vurdering (betalte beregninger) */
-  aiPanel?: React.ReactNode;
   /** kalles debounced når brukeren endrer inputs */
   onInputChange?: (input: CalcInput) => void;
 }
@@ -49,7 +47,6 @@ export function Calculator({
   urlSync = false,
   shareActions = false,
   examplePresets = false,
-  aiPanel,
   onInputChange,
 }: CalculatorProps) {
   const [input, dispatch] = useReducer(reducer, initialInput ?? DEFAULT_INPUT);
@@ -119,55 +116,57 @@ export function Calculator({
 
   return (
     <div className="relative">
-      {examplePresets ? (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Prøv et eksempel:
-          </span>
-          {EXAMPLE_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-              onClick={() => {
-                dispatch({ type: "replace", input: { ...preset.input } });
-                toast.success(
-                  `Eksempel lastet: ${preset.label}. Juster tallene fritt.`,
-                );
-              }}
-            >
-              {preset.label}
-            </button>
-          ))}
+      {examplePresets || shareActions ? (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          {examplePresets ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[13px] text-muted-foreground">
+                Prøv et eksempel:
+              </span>
+              {EXAMPLE_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:border-cta hover:text-cta"
+                  onClick={() => {
+                    dispatch({ type: "replace", input: { ...preset.input } });
+                    toast.success(
+                      `Eksempel lastet: ${preset.label}. Juster tallene fritt.`,
+                    );
+                  }}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span />
+          )}
+          {shareActions ? (
+            <div className="flex items-center gap-1.5">
+              <Button variant="outline" size="sm" onClick={copyShareLink}>
+                <Share2 data-slot="icon" />
+                Del
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Nullstill kalkulatoren"
+                title="Nullstill"
+                onClick={() => {
+                  dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
+                  toast.success("Kalkulatoren er nullstilt.");
+                }}
+              >
+                <RotateCcw />
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start">
-        {/* Forutsetninger: mørk furugrønn panelflate */}
-        <div className="surface-panel dark rounded-3xl px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-          <div className="flex min-h-9 items-center justify-between gap-2">
-            <p className="eyebrow">Forutsetninger</p>
-            {shareActions ? (
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={copyShareLink}>
-                  <Share2 data-slot="icon" />
-                  Del
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Nullstill kalkulatoren"
-                  title="Nullstill"
-                  onClick={() => {
-                    dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
-                    toast.success("Kalkulatoren er nullstilt.");
-                  }}
-                >
-                  <RotateCcw />
-                </Button>
-              </div>
-            ) : null}
-          </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
+        <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
           <InputPanel
             input={input}
             result={result}
@@ -176,14 +175,14 @@ export function Calculator({
         </div>
 
         <div className="pb-24 lg:sticky lg:top-20 lg:pb-0">
-          <ResultsPanel input={input} result={result} aiPanel={aiPanel} />
+          <ResultsPanel input={input} result={result} />
         </div>
       </div>
 
       {/* Sticky oppsummering på mobil */}
       <a
         href="#resultater"
-        className="surface-panel dark fixed inset-x-4 bottom-4 z-40 flex items-center justify-between gap-3 rounded-2xl border border-border px-5 py-3.5 shadow-lg shadow-black/20 lg:hidden"
+        className="surface-dark fixed inset-x-4 bottom-4 z-40 flex items-center justify-between gap-3 rounded-full border border-white/10 px-5 py-3.5 shadow-lg shadow-black/20 lg:hidden"
       >
         <span className="flex items-center gap-2.5 text-sm">
           <span
@@ -199,7 +198,7 @@ export function Calculator({
         </span>
         <span
           className={cn(
-            "font-mono text-base font-bold tabular-nums",
+            "text-base font-semibold tabular-nums",
             verdict === "positive" && "text-positive",
             verdict === "warning" && "text-warning",
             verdict === "negative" && "text-destructive",

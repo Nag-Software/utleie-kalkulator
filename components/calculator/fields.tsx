@@ -11,22 +11,26 @@ interface FieldShellProps {
   id: string;
   label: string;
   hint?: string;
-  suffix?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
 }
 
 function FieldShell({ id, label, hint, children, action }: FieldShellProps) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id} className="text-[13px]">
+        <Label
+          htmlFor={id}
+          className="text-[13px] font-medium tracking-[-0.01em]"
+        >
           {label}
         </Label>
         {action}
       </div>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? (
+        <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -37,6 +41,7 @@ interface MoneyFieldProps {
   onChange: (value: number) => void;
   sliderMax?: number;
   sliderStep?: number;
+  suffix?: string;
   hint?: string;
   action?: React.ReactNode;
 }
@@ -48,6 +53,7 @@ export function MoneyField({
   onChange,
   sliderMax,
   sliderStep = 1000,
+  suffix = "kr",
   hint,
   action,
 }: MoneyFieldProps) {
@@ -61,7 +67,7 @@ export function MoneyField({
           id={id}
           inputMode="numeric"
           autoComplete="off"
-          className="h-9 pr-9 font-mono tabular-nums"
+          className="pr-10 text-[15px] font-medium tabular-nums"
           value={draft ?? formatNumber(value)}
           onFocus={(e) => {
             setDraft(value === 0 ? "" : String(value));
@@ -73,8 +79,8 @@ export function MoneyField({
           }}
           onBlur={() => setDraft(null)}
         />
-        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-          kr
+        <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-[13px] text-muted-foreground">
+          {suffix}
         </span>
       </div>
       {sliderMax ? (
@@ -103,7 +109,7 @@ interface NumberSliderFieldProps {
   hint?: string;
 }
 
-/** Prosent- og årstall: input + slider. */
+/** Prosent- og årstall: input + slider side om side. */
 export function NumberSliderField({
   label,
   value,
@@ -129,12 +135,12 @@ export function NumberSliderField({
   return (
     <FieldShell id={id} label={label} hint={hint}>
       <div className="flex items-center gap-3">
-        <div className="relative w-28 shrink-0">
+        <div className="relative w-[104px] shrink-0">
           <Input
             id={id}
             inputMode="decimal"
             autoComplete="off"
-            className="h-9 pr-8 font-mono tabular-nums"
+            className="pr-9 text-[15px] font-medium tabular-nums"
             value={displayValue}
             onFocus={(e) => {
               setDraft(String(value).replace(".", ","));
@@ -146,7 +152,7 @@ export function NumberSliderField({
             }}
             onBlur={() => setDraft(null)}
           />
-          <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-sm text-muted-foreground">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[13px] text-muted-foreground">
             {suffix}
           </span>
         </div>
@@ -185,7 +191,7 @@ export function SegmentedField<T extends string>({
       <div
         role="radiogroup"
         aria-label={label}
-        className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1"
+        className="grid grid-cols-2 gap-1 rounded-full border border-border bg-secondary p-1"
       >
         {options.map((option) => (
           <button
@@ -197,7 +203,7 @@ export function SegmentedField<T extends string>({
             className={cn(
               "rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
               value === option.value
-                ? "bg-card text-foreground shadow-sm"
+                ? "bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.06)]"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -206,5 +212,29 @@ export function SegmentedField<T extends string>({
         ))}
       </div>
     </FieldShell>
+  );
+}
+
+/** Små hurtigvalg under et felt (f.eks. egenkapitalandel). */
+export function QuickChips({
+  options,
+  onSelect,
+}: {
+  options: { label: string; value: number }[];
+  onSelect: (value: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((option) => (
+        <button
+          key={option.label}
+          type="button"
+          onClick={() => onSelect(option.value)}
+          className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-cta hover:text-cta"
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { COMPANY, CONTACT_EMAIL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Personvernerklæring",
@@ -12,11 +13,17 @@ export default function PersonvernPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
       <article className="article">
-        <h1 className="font-display text-4xl font-semibold">Personvernerklæring</h1>
+        <h1 className="display text-[clamp(2rem,5vw,2.75rem)]">Personvernerklæring</h1>
         <p className="mt-3">
-          Behandlingsansvarlig: Nag Software (kontakt:{" "}
-          <a href="mailto:casper@nagsoftware.no">casper@nagsoftware.no</a>).
-          Sist oppdatert 4. juli 2026.
+          Sist oppdatert 26. august 2026.
+        </p>
+        <p>
+          <strong>Behandlingsansvarlig</strong> er {COMPANY.legalName}, org.nr.{" "}
+          {COMPANY.organizationNumberFormatted}, {COMPANY.street},{" "}
+          {COMPANY.postalCode} {COMPANY.city}, {COMPANY.country}. Henvendelser
+          om personvern rettes til{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> eller{" "}
+          <a href={`tel:${COMPANY.phone}`}>{COMPANY.phoneFormatted}</a>.
         </p>
 
         <h2>Kort versjon</h2>
@@ -40,18 +47,13 @@ export default function PersonvernPage() {
             <strong>Betaling:</strong> Kjøp gjennomføres hos Stripe, som
             behandler kort- og kontaktopplysninger som selvstendig
             behandlingsansvarlig. Ved kjøp av en FINN-beregning lagres
-            boligtallene fra annonsen og KI-vurderingen som del av
+            boligtallene fra annonsen som del av
             betalingsoppføringen hos Stripe – dette er opplysninger om en
             bolig, ikke om deg.
           </li>
           <li>
             <strong>Misbruksvern:</strong> IP-adresser brukes kun flyktig i
             minnet for å begrense misbruk, og lagres ikke.
-          </li>
-          <li>
-            <strong>KI-vurdering:</strong> Ved betalte beregninger sendes
-            beregningstallene og boligfakta fra annonsen (ikke opplysninger om
-            deg) til OpenAI for å generere vurderingen.
           </li>
           <li>
             <strong>Tekniske logger:</strong> Vår driftsleverandør Vercel
@@ -71,7 +73,7 @@ export default function PersonvernPage() {
           normalt ingen personopplysninger å utlevere eller slette. Har du
           spørsmål, eller ønsker du en betalt beregning slettet (oppgi lenken),
           kontakt oss på{" "}
-          <a href="mailto:casper@nagsoftware.no">casper@nagsoftware.no</a>. Du
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Du
           har rett til å klage til Datatilsynet.
         </p>
       </article>

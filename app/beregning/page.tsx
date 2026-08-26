@@ -126,12 +126,9 @@ export default async function BeregningPage({
       );
       return (
         <BeregningClient
-          sessionId={lookup.sessionId}
           finn={lookup.finn.p}
           warnings={lookup.finn.w}
           initialInputs={initialInputs}
-          initialAi={lookup.calculation.ai}
-          initialAiRuns={lookup.calculation.aiRuns}
         />
       );
     }

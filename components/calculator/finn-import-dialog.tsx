@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Loader2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Download, Loader2, Search, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FinnPreview } from "@/lib/finn/types";
 import { formatNOK } from "@/lib/format";
-import { PRICE_NOK } from "@/lib/site";
+import { COMPANY, PRICE_NOK } from "@/lib/site";
 
 type Phase = "input" | "previewing" | "preview" | "paying";
 
@@ -108,11 +108,8 @@ export function FinnImportDialog({
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button
-            size="lg"
-            className="h-11 rounded-full bg-cta px-6 text-[15px] font-semibold text-cta-foreground hover:bg-cta/90"
-          >
-            <Sparkles data-slot="icon" />
+          <Button variant="cta" size="lg">
+            <Download data-slot="icon" />
             Hent fra FINN-annonse
           </Button>
         )}
@@ -121,8 +118,8 @@ export function FinnImportDialog({
         <DialogHeader>
           <DialogTitle>Hent tall fra FINN</DialogTitle>
           <DialogDescription>
-            Vi fyller ut tallene fra annonsen og gir deg en objektiv
-            KI-vurdering av lønnsomheten.
+            Vi leser kjøpesum, felleskostnader, fellesgjeld og omkostninger
+            rett fra annonsen og fyller ut kalkulatoren for deg.
           </DialogDescription>
         </DialogHeader>
 
@@ -151,7 +148,8 @@ export function FinnImportDialog({
             </div>
             <Button
               type="submit"
-              className="w-full rounded-full"
+              className="w-full"
+              size="lg"
               disabled={phase === "previewing" || !url.trim()}
             >
               {phase === "previewing" ? (
@@ -166,13 +164,13 @@ export function FinnImportDialog({
 
         {(phase === "preview" || phase === "paying") && preview ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-xl border p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-border p-3">
               {preview.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={preview.imageUrl}
                   alt=""
-                  className="size-16 shrink-0 rounded-md object-cover"
+                  className="size-16 shrink-0 rounded-lg object-cover"
                 />
               ) : null}
               <div className="min-w-0">
@@ -190,7 +188,7 @@ export function FinnImportDialog({
                 </p>
                 <button
                   type="button"
-                  className="mt-0.5 text-xs text-primary hover:underline"
+                  className="mt-0.5 text-xs text-cta hover:underline"
                   onClick={() => {
                     setPhase("input");
                     setPreview(null);
@@ -202,7 +200,7 @@ export function FinnImportDialog({
             </div>
 
             {paymentsEnabled === false ? (
-              <p className="rounded-lg bg-secondary p-3 text-sm text-secondary-foreground">
+              <p className="rounded-xl border border-border bg-secondary p-3.5 text-sm">
                 Betaling er ikke tilgjengelig ennå – FINN-import lanseres snart.
                 I mellomtiden kan du bruke den manuelle kalkulatoren gratis.
               </p>
@@ -213,16 +211,26 @@ export function FinnImportDialog({
                     type="checkbox"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-0.5 size-4 accent-primary"
+                    className="mt-0.5 size-4 accent-[#ff5d30]"
                   />
                   <span>
                     Jeg samtykker til at leveringen starter umiddelbart, og at
-                    angreretten dermed bortfaller (angrerettloven § 22 n).
+                    angreretten dermed bortfaller (angrerettloven § 22 n). Jeg
+                    har lest{" "}
+                    <a
+                      href="/vilkar"
+                      target="_blank"
+                      className="font-medium text-foreground underline decoration-cta decoration-2 underline-offset-2 hover:text-cta"
+                    >
+                      salgsvilkårene
+                    </a>
+                    .
                   </span>
                 </label>
                 <Button
-                  className="w-full rounded-full bg-cta font-semibold text-cta-foreground hover:bg-cta/90"
+                  variant="cta"
                   size="lg"
+                  className="w-full"
                   disabled={!consent || phase === "paying"}
                   onClick={() => void startCheckout()}
                 >
@@ -233,11 +241,17 @@ export function FinnImportDialog({
                   )}
                   Hent tall og beregn – {PRICE_NOK} kr
                 </Button>
-                <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                  <ShieldCheck className="size-3.5" aria-hidden />
-                  Sikker betaling med Stripe · Automatisk refusjon hvis henting
-                  feiler
-                </p>
+                <div className="space-y-1.5 text-center text-xs text-muted-foreground">
+                  <p className="flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="size-3.5" aria-hidden />
+                    Sikker betaling med Stripe · Automatisk refusjon hvis
+                    henting feiler
+                  </p>
+                  <p>
+                    Selger: {COMPANY.legalName}, org.nr.{" "}
+                    {COMPANY.organizationNumberFormatted}
+                  </p>
+                </div>
               </>
             )}
           </div>

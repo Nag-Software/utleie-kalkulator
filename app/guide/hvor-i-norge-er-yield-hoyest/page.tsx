@@ -143,7 +143,7 @@ export default function Page() {
         på kontantstrøm etter skatt, med realistisk tomgang – ikke på
         bruttotallet alene. Regn på konkrete objekter i{" "}
         <Link href="/">utleiekalkulatoren</Link>: legg inn leie, tomgang og
-        kostnader, eller hent annonsen rett fra FINN med KI-vurdering (9,90
+        kostnader, eller hent tallene rett fra FINN-annonsen (9,90
         kr). Kalkulatoren er ellers gratis og krever ingen konto.
       </p>
     </ArticleLayout>

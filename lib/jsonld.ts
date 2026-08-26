@@ -1,5 +1,5 @@
 import type { FaqItem } from "@/lib/faq";
-import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { COMPANY, CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export function websiteJsonLd() {
   return {
@@ -20,10 +20,35 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Nag Software",
+    name: COMPANY.legalName,
+    legalName: COMPANY.legalName,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.svg`,
     email: CONTACT_EMAIL,
+    telephone: COMPANY.phone,
+    // Organisasjonsnummeret fra Enhetsregisteret; vatID utelates fordi
+    // foretaket ikke er mva-registrert.
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "Organisasjonsnummer",
+      value: COMPANY.organizationNumber,
+    },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: COMPANY.street,
+      postalCode: COMPANY.postalCode,
+      addressLocality: COMPANY.city,
+      addressCountry: COMPANY.countryCode,
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      telephone: COMPANY.phone,
+      email: CONTACT_EMAIL,
+      areaServed: COMPANY.countryCode,
+      availableLanguage: ["nb", "no"],
+    },
+    sameAs: [COMPANY.brregUrl],
   };
 }
 
@@ -37,14 +62,14 @@ export function webApplicationJsonLd() {
     operatingSystem: "Web",
     inLanguage: "nb-NO",
     description:
-      "Beregn kontantstrøm, yield og avkastning på utleiebolig. Gratis med manuelle tall; automatisk import fra FINN-annonse med KI-vurdering for 9,90 kr.",
+      "Beregn kontantstrøm, yield og avkastning på utleiebolig. Gratis med manuelle tall; automatisk import fra FINN-annonse for 9,90 kr.",
     featureList: [
       "Kontantstrøm per måned etter skatt",
       "Brutto og netto yield",
       "Cash-on-cash-avkastning",
       "Break-even-leie og break-even-rente",
       "Flerårig prognose og amortisering",
-      "Import fra FINN-annonse med KI-vurdering",
+      "Import av tall fra FINN-annonse",
     ],
     offers: [
       {
@@ -55,7 +80,7 @@ export function webApplicationJsonLd() {
       },
       {
         "@type": "Offer",
-        name: "FINN-import med KI-vurdering",
+        name: "FINN-import",
         price: "9.90",
         priceCurrency: "NOK",
       },

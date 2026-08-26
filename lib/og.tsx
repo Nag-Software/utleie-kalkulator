@@ -19,15 +19,14 @@ function LogoMark({ size }: { size: number }) {
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: "12px",
-        border: "2px solid rgba(247, 242, 230, 0.25)",
-        background: "#1d4636",
+        background: "#ff5d30",
       }}
     >
       <svg viewBox="0 0 64 64" width={size - 6} height={size - 6}>
         <path
           d="M14 27.5 L32 12 L50 27.5"
           fill="none"
-          stroke="#f7f2e6"
+          stroke="#ffffff"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -35,7 +34,7 @@ function LogoMark({ size }: { size: number }) {
         <path
           d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
           fill="none"
-          stroke="#f7f2e6"
+          stroke="#ffffff"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -43,7 +42,7 @@ function LogoMark({ size }: { size: number }) {
         <path
           d="M37.5 31.5 L44 31.5 L44 38"
           fill="none"
-          stroke="#f7f2e6"
+          stroke="#ffffff"
           strokeWidth="5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -65,8 +64,8 @@ export function guideOgImage(title: string) {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "linear-gradient(160deg, #1d4636 0%, #16382c 100%)",
-          color: "#f7f2e6",
+          background: "#111111",
+          color: "#ffffff",
           fontFamily: "sans-serif",
           position: "relative",
         }}
@@ -79,7 +78,7 @@ export function guideOgImage(title: string) {
             width: "440px",
             height: "440px",
             borderRadius: "9999px",
-            background: "rgba(247, 242, 230, 0.06)",
+            background: "rgba(255, 93, 48, 0.14)",
           }}
         />
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -92,8 +91,8 @@ export function guideOgImage(title: string) {
               marginLeft: "8px",
               padding: "6px 18px",
               borderRadius: "999px",
-              border: "2px solid #e2582a",
-              color: "#f7f2e6",
+              border: "2px solid #ff5d30",
+              color: "#ff5d30",
               fontSize: "22px",
             }}
           >

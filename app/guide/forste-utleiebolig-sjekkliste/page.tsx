@@ -128,8 +128,7 @@ export default function Page() {
         gjør regnedelen på minutter – legg inn pris, leie, rente og kostnader
         og få kontantstrøm etter skatt, netto yield og break-even, gratis og
         uten konto. Med FINN-import (9,90 kr) hentes tallene rett fra
-        annonsen, med en KI-vurdering av objektet på toppen, før du i det
-        hele tatt booker visning.
+        annonsen, før du i det hele tatt booker visning.
       </p>
     </ArticleLayout>
   );

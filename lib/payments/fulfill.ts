@@ -1,5 +1,6 @@
 import "server-only";
 import type Stripe from "stripe";
+import { getConfig } from "@/lib/config";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
 import {
   chunkValue,
@@ -25,6 +26,54 @@ export type PaidLookup =
     };
 
 const SESSION_ID_PATTERN = /^cs_[a-zA-Z0-9_]+$/;
+const DEV_SESSION_PATTERN = /^dev_(\d{8,10})$/;
+
+// dev-bypass: in-memory-lager i stedet for PaymentIntent-metadata.
+// Nullstilles ved restart/hot reload — godt nok for localhost.
+const devSessions = new Map<string, PaidCalculation>();
+
+/** Sesjons-id fra dev-bypass (localhost, uten Stripe)? */
+export function isDevSession(sessionId: string): boolean {
+  return DEV_SESSION_PATTERN.test(sessionId);
+}
+
+async function loadOrFulfillDev(
+  sessionId: string,
+  finnkode: string,
+): Promise<PaidLookup> {
+  const cached = devSessions.get(sessionId);
+  if (cached?.finn) {
+    return {
+      kind: "ready",
+      finn: cached.finn,
+      calculation: cached,
+      paymentIntentId: `pi_${sessionId}`,
+      piMetadata: {},
+      sessionId,
+    };
+  }
+  try {
+    const outcome = await fetchFinnListing(finnkode);
+    const stored: StoredFinn = { p: outcome.parsed, w: outcome.warnings };
+    const calculation: PaidCalculation = {
+      state: { kind: "fulfilled" },
+      finn: stored,
+    };
+    devSessions.set(sessionId, calculation);
+    return {
+      kind: "ready",
+      finn: stored,
+      calculation,
+      paymentIntentId: `pi_${sessionId}`,
+      piMetadata: {},
+      sessionId,
+    };
+  } catch (error) {
+    const code = error instanceof FinnError ? error.code : "PARSE_FAIL";
+    console.error(`dev fulfillment failed for ${sessionId}: ${code}`);
+    return { kind: "failed", code, refunded: true };
+  }
+}
 
 /**
  * Slår opp en betalt beregning med Stripe som eneste sannhetskilde, og
@@ -34,6 +83,11 @@ const SESSION_ID_PATTERN = /^cs_[a-zA-Z0-9_]+$/;
  * dobbel refusjon avvises av Stripe og behandles som allerede refundert.
  */
 export async function loadOrFulfill(sessionId: string): Promise<PaidLookup> {
+  if (getConfig().devBypassPayments) {
+    const devMatch = DEV_SESSION_PATTERN.exec(sessionId);
+    if (devMatch) return loadOrFulfillDev(sessionId, devMatch[1]);
+  }
+
   const stripe = getStripe();
   if (!stripe) return { kind: "unavailable" };
   if (!SESSION_ID_PATTERN.test(sessionId)) return { kind: "not_found" };

@@ -15,11 +15,11 @@ import { formatCompact, formatNOK } from "@/lib/format";
 const chartConfig = {
   cumulativeCashflow: {
     label: "Akkumulert kontantstrøm",
-    color: "var(--chart-2)",
+    color: "var(--chart-1)",
   },
   equityValue: {
     label: "Egenkapitalverdi",
-    color: "var(--chart-1)",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -53,7 +53,7 @@ export function ProjectionChart({ years }: { years: YearRow[] }) {
                     />
                     {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
                   </span>
-                  <span className="font-mono font-medium tabular-nums">
+                  <span className="font-medium tabular-nums">
                     {formatNOK(Number(value))}
                   </span>
                 </div>

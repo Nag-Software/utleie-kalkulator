@@ -35,24 +35,22 @@ function GuideRow({
   return (
     <Link
       href={`/guide/${guide.slug}`}
-      className="group flex items-center justify-between gap-6 py-6"
+      className="group flex items-center justify-between gap-6 rounded-2xl border border-border bg-card px-5 py-5 transition-colors hover:border-foreground/25"
     >
       <div className="min-w-0">
         {showCategory && (
-          <p className="eyebrow mb-1.5 !text-[10px]">
+          <span className="eyebrow mb-2">
             {CATEGORY_LABELS.get(guide.category)}
-          </p>
+          </span>
         )}
-        <h3 className="text-lg font-semibold leading-snug underline-offset-4 group-hover:underline">
-          {guide.title}
-        </h3>
+        <h3 className="display-sm text-[17px] leading-snug">{guide.title}</h3>
         <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
           {guide.description}
         </p>
       </div>
       <span
         aria-hidden
-        className="text-lg text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground"
+        className="text-lg text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-cta"
       >
         →
       </span>
@@ -98,7 +96,7 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
           placeholder="Søk i guidene – f.eks. skatt, depositum, yield …"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="h-12 w-full rounded-full border border-border bg-transparent pl-11 pr-12 text-[15px] outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+          className="h-12 w-full rounded-full border border-border bg-card pl-11 pr-12 text-[15px] outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-cta focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
@@ -125,7 +123,7 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
           className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
             activeCategory === "alle"
               ? "border-foreground bg-foreground text-background"
-              : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+              : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground"
           }`}
         >
           Alle ({guides.length})
@@ -143,7 +141,7 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
             className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
               activeCategory === category.id
                 ? "border-foreground bg-foreground text-background"
-                : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground"
             }`}
           >
             {category.label} ({countByCategory.get(category.id) ?? 0})
@@ -154,7 +152,7 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
       {/* Treffliste (filtrert) eller full oversikt gruppert på kategori */}
       {isFiltering ? (
         <div className="mt-8">
-          <p aria-live="polite" className="eyebrow">
+          <p aria-live="polite" className="text-[13px] text-muted-foreground">
             {results.length === 0
               ? "Ingen treff"
               : results.length === 1
@@ -180,7 +178,7 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
               </button>
             </div>
           ) : (
-            <div className="mt-2 divide-y divide-border border-t border-border">
+            <div className="mt-4 grid gap-3">
               {results.map((guide) => (
                 <GuideRow key={guide.slug} guide={guide} showCategory />
               ))}
@@ -203,14 +201,14 @@ export function GuideDirectory({ guides }: { guides: GuideMeta[] }) {
               >
                 <h2
                   id={`kategori-${category.id}`}
-                  className="font-display text-2xl font-semibold"
+                  className="display text-2xl"
                 >
                   {category.label}
                 </h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                   {category.blurb}
                 </p>
-                <div className="mt-5 divide-y divide-border border-t border-border">
+                <div className="mt-5 grid gap-3">
                   {categoryGuides.map((guide) => (
                     <GuideRow
                       key={guide.slug}

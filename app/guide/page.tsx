@@ -19,8 +19,8 @@ export default function GuideIndexPage() {
           __html: jsonLdString(guideListJsonLd(GUIDES)),
         }}
       />
-      <p className="eyebrow">Guider</p>
-      <h1 className="font-display mt-3 text-4xl font-semibold sm:text-5xl">
+      <span className="eyebrow eyebrow-dot">Guider</span>
+      <h1 className="display mt-5 text-[clamp(2rem,5vw,3rem)]">
         Guider om utleie og boliginvestering
       </h1>
       <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">

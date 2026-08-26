@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-20 text-center sm:px-6">
       <p className="eyebrow">404</p>
-      <h1 className="font-display mt-3 text-4xl font-semibold sm:text-5xl">
+      <h1 className="display mt-4 text-[clamp(2rem,5vw,3rem)]">
         Siden finnes ikke
       </h1>
       <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted-foreground">

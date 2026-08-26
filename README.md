@@ -1,28 +1,26 @@
 # Utleie-kalkulator.no
 
 Lønnsomhetskalkulator for utleiebolig: kontantstrøm, yield, break-even og
-prognose. Gratis med manuelle tall; import fra FINN-annonse med KI-vurdering
-koster 9,90 kr per beregning (Stripe, uten konto).
+prognose. Gratis med manuelle tall; import fra FINN-annonse koster 9,90 kr
+per beregning (Stripe, uten konto).
 
 ## Stack
 
 - **Next.js 16** (App Router) + React 19 + Tailwind 4 + shadcn/ui + recharts
 - **Stripe Checkout** — også eneste datalager: ingen database
-- **OpenAI** structured output (objektiv vurdering, 0–100 % sannsynlighet)
 
 ## Kom i gang
 
 ```bash
 pnpm install
-pnpm dev        # kjører uten nøkler — betaling/KI er gated
+pnpm dev        # kjører uten nøkler — betaling er gated
 pnpm test       # vitest: kalkulatormotor, FINN-parser (fixtures), metadata-lager
 pnpm build
 ```
 
 Appen **booter uten nøkler**: uten `STRIPE_SECRET_KEY` viser FINN-dialogen
-«betaling kommer snart»; uten `OPENAI_API_KEY` får betalte beregninger
-vurderingen så snart nøkkelen er på plass. Env-verdier som starter med
-`PLACEHOLDER` behandles som fraværende. Kopier `.env.example` til `.env.local`.
+«betaling kommer snart». Env-verdier som starter med `PLACEHOLDER` behandles
+som fraværende. Kopier `.env.example` til `.env.local`.
 
 ## Arkitektur: ingen database
 
@@ -35,18 +33,15 @@ Stripe er eneste sannhetskilde for betalte beregninger:
    FINN-annonsen og skriver parsede tall inn i PaymentIntent-metadata
    (chunket JSON, `lib/payments/metadata.ts`). Refresh og senere besøk leser
    derfra — fungerer selv om annonsen senere slettes fra FINN.
-3. **KI-vurdering:** klienten kaller `/api/paid/ai` (kjøring nr. 1 ved første
-   besøk; én re-kjøring inkludert når tallene er endret — maks 2, håndhevet
-   via `ai_runs`/`inputs_hash` i samme metadata).
-4. **Feil → refusjon:** hard FINN-feil ved første henting refunderer beløpet
+3. **Feil → refusjon:** hard FINN-feil ved første henting refunderer beløpet
    automatisk og merker betalingen `refunded:<KODE>`.
-5. **Justeringer og deling:** alle kalkulatorverdier ligger i URL-en (gratis
+4. **Justeringer og deling:** alle kalkulatorverdier ligger i URL-en (gratis
    og betalt). Ingen webhook, ingen cron, ingen server-lagring av persondata.
 
 Øvrige notater:
 
-- Kalkulatormotoren (`lib/calc/engine.ts`) er ren, isomorf TS — live i
-  nettleseren og server-side som grunnlag for KI-vurderingen.
+- Kalkulatormotoren (`lib/calc/engine.ts`) er ren, isomorf TS — samme kode
+  live i nettleseren og server-side.
 - FINN-parsing (`lib/finn/`) er label-basert (dt/dd-tekst, aldri CSS-klasser)
   med feiltaksonomi `NOT_FOUND | BLOCKED | TIMEOUT | PARSE_FAIL` og fixtures
   fra ekte annonser i `lib/finn/__fixtures__/`.
@@ -57,8 +52,6 @@ Stripe er eneste sannhetskilde for betalte beregninger:
 
 1. **Stripe:** Sett `STRIPE_SECRET_KEY` i Vercel (erstatt PLACEHOLDER).
    Ingen webhook å registrere.
-2. **OpenAI:** Sett `OPENAI_API_KEY` (+ ev. `OPENAI_MODEL`, default
-   `gpt-5-mini`).
 
 ## Dev-verktøy
 

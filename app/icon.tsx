@@ -23,7 +23,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#1d4636",
+          background: "#ff5d30",
           borderRadius: Math.round(size * 0.25),
         }}
       >
@@ -31,7 +31,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           <path
             d="M14 27.5 L32 12 L50 27.5"
             fill="none"
-            stroke="#f7f2e6"
+            stroke="#ffffff"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -39,7 +39,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           <path
             d="M17 46.5 L27.5 36 L33.5 41.5 L44 31.5"
             fill="none"
-            stroke="#f7f2e6"
+            stroke="#ffffff"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -47,7 +47,7 @@ export default async function Icon(props: { id: string | Promise<string> }) {
           <path
             d="M37.5 31.5 L44 31.5 L44 38"
             fill="none"
-            stroke="#f7f2e6"
+            stroke="#ffffff"
             strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
