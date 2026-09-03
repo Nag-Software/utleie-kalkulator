@@ -59,18 +59,24 @@ export async function GET(request: Request) {
         break;
     }
 
+    // `aggregate` er ikke alltid utfylt; da er beløpet på betalingen selv
+    // det brukeren godkjente. Uten dette fallbacket ville vi trukket 0 og
+    // fått avvik i `complete_purchase`.
+    const amountOre = payment.authorizedOre || payment.amountOre;
+    if (amountOre <= 0) {
+      console.error("vipps retur: fant ikke beløpet for", reference);
+      return redirect("/klippekort?kjop=feilet");
+    }
+
     // Trekk beløpet før klippene krediteres: feiler trekket, skal brukeren
     // ikke få et klippekort vi aldri får betalt for. Kjøpet blir stående som
     // «pending», og et nytt treff på denne URL-en prøver igjen (capture er
     // idempotent på referanse + beløp).
-    if (payment.capturedOre < payment.authorizedOre) {
-      await captureVippsPayment(reference, payment.authorizedOre);
+    if (payment.capturedOre < amountOre) {
+      await captureVippsPayment(reference, amountOre);
     }
 
-    const purchase = await completePurchase({
-      reference,
-      amountOre: payment.authorizedOre,
-    });
+    const purchase = await completePurchase({ reference, amountOre });
 
     // Kjøpte han for å åpne en bestemt annonse, send ham rett dit.
     if (purchase.pendingFinnkode) {
