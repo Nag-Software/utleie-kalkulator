@@ -153,13 +153,20 @@ function FinnSection() {
             </ul>
           </div>
           <div className="flex flex-col items-start gap-4 lg:w-64">
-            <p>
-              <span className="display text-5xl">{KLIPP_PRIS_NOK} kr</span>
-              <span className="mt-1.5 block text-sm text-white/60">
-                {KLIPP_PER_KJOP} annonser · gyldig{" "}
+            <div>
+              {/* Antallet hører til prisen: «49 kr» alene leses lett som
+                  prisen for én annonse. */}
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <span className="display text-5xl">{KLIPP_PRIS_NOK} kr</span>
+                <span className="text-lg font-semibold text-white/90">
+                  for {KLIPP_PER_KJOP} klipp
+                </span>
+              </p>
+              <p className="mt-1.5 text-[13px] text-white/55">
+                Ett klipp per annonse · gyldig{" "}
                 {KLIPP_GYLDIGHET_MANEDER} måneder
-              </span>
-            </p>
+              </p>
+            </div>
             <FinnImportDialog
               trigger={
                 <Button variant="cta" size="lg" className="w-full">

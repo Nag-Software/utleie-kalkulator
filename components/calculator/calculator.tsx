@@ -1,12 +1,13 @@
 "use client";
 
 import { RotateCcw, Share2 } from "lucide-react";
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calculate } from "@/lib/calc/engine";
 import { type CalcInput, DEFAULT_INPUT } from "@/lib/calc/schema";
 import { formatNumber } from "@/lib/format";
+import type { EstimatedCalcField } from "@/lib/research/enrich";
 import { cn } from "@/lib/utils";
 import { InputPanel } from "./input-panel";
 import { EXAMPLE_PRESETS } from "./presets";
@@ -30,6 +31,17 @@ function reducer(state: CalcInput, action: Action): CalcInput {
   }
 }
 
+const ESTIMATED_FIELDS: EstimatedCalcField[] = [
+  "monthlyRent",
+  "propertyTaxYearly",
+  "insuranceYearly",
+  "maintenancePctOfRent",
+];
+
+function isEstimatedField(field: keyof CalcInput): field is EstimatedCalcField {
+  return ESTIMATED_FIELDS.includes(field as EstimatedCalcField);
+}
+
 export interface CalculatorProps {
   initialInput?: CalcInput;
   /** les/skriv inputs i URL-query; andre query-params (f.eks. session_id) bevares */
@@ -40,6 +52,13 @@ export interface CalculatorProps {
   examplePresets?: boolean;
   /** kalles debounced når brukeren endrer inputs */
   onInputChange?: (input: CalcInput) => void;
+  /** felt som ble auto-fylt fra FINN/anslag; merket til brukeren endrer dem */
+  estimatedFields?: EstimatedCalcField[];
+  /**
+   * Vises øverst i høyre kolonne, over resultatene. Brukes til bildene fra
+   * FINN-annonsen, slik at venstre kolonne er forutsetningene alene.
+   */
+  gallery?: React.ReactNode;
 }
 
 export function Calculator({
@@ -48,8 +67,13 @@ export function Calculator({
   shareActions = false,
   examplePresets = false,
   onInputChange,
+  estimatedFields: initialEstimated = [],
+  gallery,
 }: CalculatorProps) {
   const [input, dispatch] = useReducer(reducer, initialInput ?? DEFAULT_INPUT);
+  const [estimated, setEstimated] = useState(
+    () => new Set<EstimatedCalcField>(initialEstimated),
+  );
   const result = useMemo(() => calculate(input), [input]);
   const initialRef = useRef(input);
   const hydrated = useRef(false);
@@ -77,6 +101,11 @@ export function Calculator({
       for (const [key, value] of encodeInputToParams(input)) {
         params.set(key, value);
       }
+      if (estimated.size > 0) {
+        params.set("est", [...estimated].join(","));
+      } else {
+        params.delete("est");
+      }
       const query = params.toString();
       window.history.replaceState(
         null,
@@ -85,7 +114,7 @@ export function Calculator({
       );
     }, 300);
     return () => clearTimeout(timeout);
-  }, [input, urlSync]);
+  }, [input, urlSync, estimated]);
 
   // Meld fra om endringer (debounced)
   const onInputChangeRef = useRef(onInputChange);
@@ -170,11 +199,23 @@ export function Calculator({
           <InputPanel
             input={input}
             result={result}
-            onChange={(field, value) => dispatch({ type: "set", field, value })}
+            estimatedFields={estimated}
+            onChange={(field, value) => {
+              dispatch({ type: "set", field, value });
+              if (isEstimatedField(field)) {
+                setEstimated((prev) => {
+                  if (!prev.has(field)) return prev;
+                  const next = new Set(prev);
+                  next.delete(field);
+                  return next;
+                });
+              }
+            }}
           />
         </div>
 
         <div className="pb-24 lg:sticky lg:top-20 lg:pb-0">
+          {gallery ? <div className="mb-5">{gallery}</div> : null}
           <ResultsPanel input={input} result={result} />
         </div>
       </div>
