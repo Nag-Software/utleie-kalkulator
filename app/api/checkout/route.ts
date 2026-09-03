@@ -1,31 +1,40 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { readSession, writeSession } from "@/lib/auth/session";
 import {
   jsonError,
   paymentsUnavailable,
   readJsonBody,
   tooManyRequests,
 } from "@/lib/api-helpers";
+import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
-import { getOrCreateCustomer, grantKlipp } from "@/lib/payments/klippekort";
-import { getStripe } from "@/lib/payments/stripe";
-import { unlockFinn } from "@/lib/payments/unlock";
+import { completePurchase, startPurchase } from "@/lib/db/klippekort";
+import { unlockFinn } from "@/lib/klippekort/unlock";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
-  KLIPP_GYLDIGHET_MANEDER,
   KLIPP_PER_KJOP,
   KLIPP_PRIS_ORE,
+  KLIPP_PRODUCT_ID,
 } from "@/lib/site";
+import { createVippsPayment } from "@/lib/vipps/epayment";
 
 const bodySchema = z.object({
   consent: z.literal(true),
+  /** Annonsen brukeren vil åpne rett etter kjøpet. */
   finnkode: z.string().regex(/^\d{8,10}$/).optional(),
 });
 
+/**
+ * Vipps' referanse må være 8–50 tegn, kun a-z, A-Z, 0-9 og bindestrek.
+ * `uk-` + 32 heksadesimaler = 35 tegn.
+ */
+function newReference(): string {
+  return `uk-${randomUUID().replaceAll("-", "")}`;
+}
+
 export async function POST(request: Request) {
   const config = getConfig();
-  const stripe = getStripe();
   if (!config.features.payments) return paymentsUnavailable();
 
   const { allowed } = await checkRateLimit(request, "checkout", 5, 600);
@@ -43,75 +52,52 @@ export async function POST(request: Request) {
     );
   }
   const { finnkode } = parsed.data;
-  const appSession = await readSession();
 
-  // Lokal utvikling uten Stripe: krediter kortet direkte.
-  if (config.devBypassPayments && !stripe) {
-    const customerId = await getOrCreateCustomer({
-      customerId: appSession?.customerId,
-      name: appSession?.name,
-    });
-    await grantKlipp(customerId, `dev_${crypto.randomUUID()}`);
-    await writeSession({ ...appSession, customerId });
-    const unlocked = finnkode
-      ? await unlockFinn(customerId, finnkode)
-      : null;
-    return NextResponse.json({
-      checkoutUrl:
-        unlocked?.ok
-          ? `${config.siteUrl}${unlocked.calculationUrl}`
-          : `${config.siteUrl}/klippekort?kjop=ok`,
-    });
+  // Klippekortet eies av en Vipps-bruker, så innlogging må skje først.
+  const session = await readSession();
+  if (!session) {
+    return jsonError(
+      401,
+      "LOGIN_REQUIRED",
+      "Logg inn med Vipps for å kjøpe klippekort.",
+    );
   }
-  if (!stripe) return paymentsUnavailable();
+
+  const reference = newReference();
 
   try {
-    const customerId = await getOrCreateCustomer({
-      customerId: appSession?.customerId,
-      name: appSession?.name,
-    });
-    await writeSession({ ...appSession, customerId });
-
-    const checkout = await stripe.checkout.sessions.create({
-      mode: "payment",
-      locale: "nb",
-      customer: customerId,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "nok",
-            unit_amount: KLIPP_PRIS_ORE,
-            product_data: {
-              name: `Klippekort – ${KLIPP_PER_KJOP} FINN-importer`,
-              description: `Gyldig i ${KLIPP_GYLDIGHET_MANEDER} måneder. Ingen abonnement.`,
-            },
-          },
-        },
-      ],
-      metadata: {
-        kind: "klippekort",
-        customerId,
-        ...(finnkode ? { finnkode } : {}),
-      },
-      payment_intent_data: {
-        metadata: { kind: "klippekort", customerId },
-      },
-      success_url: `${config.siteUrl}/api/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${config.siteUrl}/?betaling=avbrutt`,
-      custom_text: {
-        submit: {
-          message:
-            "Klippekortet krediteres umiddelbart etter betaling. Ved å betale samtykker du til dette og til at angreretten bortfaller (angrerettloven § 22 n).",
-        },
-      },
+    await startPurchase({
+      userId: session.userId,
+      productId: KLIPP_PRODUCT_ID,
+      reference,
+      finnkode,
     });
 
-    if (!checkout.url) throw new Error("session.url mangler");
-    return NextResponse.json({ checkoutUrl: checkout.url });
+    // Lokal utvikling uten Vipps-nøkler (DEV_FAKE_PAYMENTS=1).
+    if (config.devFakePayments) {
+      await completePurchase({ reference, amountOre: KLIPP_PRIS_ORE });
+      const unlocked = finnkode
+        ? await unlockFinn(session.userId, finnkode)
+        : null;
+      return NextResponse.json({
+        redirectUrl:
+          unlocked?.ok && unlocked.calculationUrl
+            ? `${config.siteUrl}${unlocked.calculationUrl}`
+            : `${config.siteUrl}/klippekort?kjop=ok`,
+      });
+    }
+
+    const { redirectUrl } = await createVippsPayment({
+      reference,
+      amountOre: KLIPP_PRIS_ORE,
+      description: `Klippekort – ${KLIPP_PER_KJOP} FINN-importer`,
+      returnUrl: `${config.siteUrl}/api/vipps/retur?ref=${reference}`,
+    });
+
+    return NextResponse.json({ redirectUrl });
   } catch (error) {
     console.error(
-      "stripe checkout failed",
+      "vipps checkout feilet",
       error instanceof Error ? error.message : error,
     );
     return jsonError(500, "CHECKOUT_FAILED", "Kunne ikke starte betalingen.");

@@ -6,6 +6,10 @@ export const SITE_URL =
 export const CONTACT_EMAIL = "casper@nagsoftware.no";
 
 /** Klippekort: én engangsbetaling gir flere FINN-importer. */
+// Må stemme med raden i `public.products` i databasen: id, clips, price_ore
+// og validity_months leses derfra ved kjøp, og verdiene her er teksten vi
+// viser. Endres prisen, må begge steder oppdateres.
+export const KLIPP_PRODUCT_ID = "klippekort-20";
 export const KLIPP_PER_KJOP = 20;
 export const KLIPP_PRIS_NOK = "49";
 export const KLIPP_PRIS_ORE = 4900;

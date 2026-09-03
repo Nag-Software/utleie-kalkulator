@@ -43,21 +43,27 @@ export default function PersonvernPage() {
         <ul>
           <li>
             <strong>Beregninger:</strong> Tallene du legger inn (kjøpesum,
-            leie, kostnader) behandles i nettleseren din. Vi har ingen egen
-            database og lagrer ingen beregninger på egne servere; deling skjer
-            ved at tallene legges i lenken du selv deler.
+            leie, kostnader) behandles i nettleseren din. Vi lagrer ingen
+            beregninger; deling skjer ved at tallene legges i lenken du selv
+            deler.
           </li>
           <li>
-            <strong>Betaling:</strong> Kjøp gjennomføres hos Stripe, som
-            behandler kort- og kontaktopplysninger som selvstendig
-            behandlingsansvarlig. Klippekortsaldo, utløpsdato og en liste over
-            FINN-koder du har låst opp, lagres i metadata på kundereferansen
-            hos Stripe. Dette er nødvendig for å levere klippekortet.
+            <strong>Betaling:</strong> Kjøp gjennomføres med Vipps. Vipps
+            MobilePay AS behandler betalingsopplysningene som selvstendig
+            behandlingsansvarlig; vi mottar kun en betalingsreferanse og
+            bekreftelse på at beløpet er betalt.
           </li>
           <li>
-            <strong>Valgfri Vipps-innlogging:</strong> Logger du inn, ber vi om
-            <code>openid</code> og navn. Vi mottar en pseudonym bruker-ID og
-            navnet ditt, slik at klippekortet kan brukes på flere enheter.
+            <strong>Innlogging med Vipps:</strong> Klippekortet krever
+            innlogging. Vi ber kun om <code>openid</code> og navn, og lagrer en
+            pseudonym bruker-ID fra Vipps sammen med navnet ditt. Vi mottar
+            ikke fødselsnummer, adresse eller e-post.
+          </li>
+          <li>
+            <strong>Klippekortet:</strong> Antall klipp, utløpsdato og hvilke
+            FINN-koder du har låst opp, lagres i vår database hos Supabase
+            (servere i EU) knyttet til den pseudonyme bruker-ID-en. Dette er
+            nødvendig for å levere klippekortet.
           </li>
           <li>
             <strong>Misbruksvern:</strong> IP-adresser brukes kun flyktig i
@@ -72,10 +78,10 @@ export default function PersonvernPage() {
         <h2>Informasjonskapsler</h2>
         <p>
           Nettsiden bruker en nødvendig, signert og <code>httpOnly</code>{" "}
-          informasjonskapsel for å knytte nettleseren til klippekortet og
-          eventuell innlogging. Den kan ikke brukes til annonsesporing. En
-          kortvarig sikkerhetskapsel brukes under Vipps-innlogging. Stripe kan
-          sette egne kapsler når du går til betalingssiden.
+          informasjonskapsel for å holde deg innlogget, slik at du ikke må
+          logge inn med Vipps hver gang. Den kan ikke brukes til
+          annonsesporing. En kortvarig sikkerhetskapsel brukes under
+          Vipps-innloggingen.
         </p>
 
         <h2>Dine rettigheter</h2>

@@ -9,8 +9,8 @@ import {
 import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
 import { extractFinnkode } from "@/lib/finn/finnkode";
+import { unlockFinn } from "@/lib/klippekort/unlock";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { unlockFinn } from "@/lib/payments/unlock";
 
 export const maxDuration = 30;
 
@@ -46,19 +46,19 @@ export async function POST(request: Request) {
 
   const finnkode = extractFinnkode(parsed.data.finnUrl);
   if (!finnkode) {
-    return jsonError(
-      400,
-      "INVALID_URL",
-      "Fant ingen FINN-kode i lenken.",
-    );
+    return jsonError(400, "INVALID_URL", "Fant ingen FINN-kode i lenken.");
   }
 
   const session = await readSession();
-  if (!session?.customerId) {
-    return jsonError(402, "NO_KLIPP", "Kjøp et klippekort først.");
+  if (!session) {
+    return jsonError(
+      401,
+      "LOGIN_REQUIRED",
+      "Logg inn med Vipps for å bruke klippekortet.",
+    );
   }
 
-  const result = await unlockFinn(session.customerId, finnkode);
+  const result = await unlockFinn(session.userId, finnkode);
   if (!result.ok) {
     const [status, code, message] = errors[result.reason];
     return jsonError(status, code, message);

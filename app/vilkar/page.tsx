@@ -114,14 +114,14 @@ export default function VilkarPage() {
 
         <h2 id="betaling">3. Betaling</h2>
         <p>
-          Betaling skjer i et sikkert betalingsvindu hos vår
-          betalingsleverandør <strong>Stripe</strong>. Tilgjengelige
-          betalingsmåter vises i betalingsvinduet. Vi mottar aldri kortnummeret
-          ditt – det håndteres i sin helhet av betalingsleverandøren.
+          Betaling skjer med <strong>Vipps</strong>, som er den eneste
+          betalingsmåten i tjenesten. Du godkjenner beløpet i Vipps-appen, og
+          vi mottar aldri kort- eller kontonummeret ditt – det håndteres i sin
+          helhet av Vipps MobilePay AS.
         </p>
         <p>
-          Beløpet belastes når bestillingen bekreftes. Kvittering sendes på
-          e-post fra betalingsleverandøren. Klippekortet aktiveres etter
+          Beløpet belastes når du godkjenner betalingen i Vipps. Kvittering
+          finner du i Vipps-appen. Klippekortet aktiveres umiddelbart etter
           gjennomført betaling og gir tilgang til {KLIPP_PER_KJOP}{" "}
           FINN-importer.
         </p>

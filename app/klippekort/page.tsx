@@ -5,14 +5,8 @@ import { Pill } from "@/components/site/primitives";
 import { Button } from "@/components/ui/button";
 import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
-import {
-  loadByCustomerId,
-  statusOf,
-} from "@/lib/payments/klippekort";
-import {
-  KLIPP_GYLDIGHET_MANEDER,
-  KLIPP_PER_KJOP,
-} from "@/lib/site";
+import { EMPTY_STATUS, loadStatus } from "@/lib/db/klippekort";
+import { KLIPP_GYLDIGHET_MANEDER, KLIPP_PER_KJOP } from "@/lib/site";
 import { KlippekortActions } from "./klippekort-actions";
 
 export const metadata: Metadata = {
@@ -28,6 +22,44 @@ function formatDate(iso: string): string {
   });
 }
 
+/** Meldingene etter en retur fra Vipps eller fra innlogging. */
+const NOTICES: Record<string, { tone: "ok" | "warn" | "error"; text: string }> = {
+  "kjop=ok": {
+    tone: "ok",
+    text: `Betalingen er fullført. ${KLIPP_PER_KJOP} klipp er lagt til klippekortet ditt.`,
+  },
+  "kjop=venter": {
+    tone: "warn",
+    text: "Vipps har ikke bekreftet betalingen ennå. Last siden på nytt om noen sekunder.",
+  },
+  "kjop=avbrutt": {
+    tone: "warn",
+    text: "Betalingen ble avbrutt. Du er ikke belastet.",
+  },
+  "kjop=feilet": {
+    tone: "error",
+    text: "Vi kunne ikke bekrefte kjøpet. Kontakt oss hvis beløpet er trukket.",
+  },
+  "login=feilet": {
+    tone: "error",
+    text: "Innloggingen med Vipps gikk ikke gjennom. Prøv en gang til.",
+  },
+  "login=avbrutt": {
+    tone: "warn",
+    text: "Innloggingen ble avbrutt.",
+  },
+  "login=utilgjengelig": {
+    tone: "error",
+    text: "Innlogging med Vipps er ikke aktivert ennå.",
+  },
+};
+
+const TONE_CLASS = {
+  ok: "border-positive/25 bg-positive/10 text-positive",
+  warn: "border-warning/25 bg-warning/10 text-warning",
+  error: "border-destructive/25 bg-destructive/10 text-destructive",
+} as const;
+
 export default async function KlippekortPage({
   searchParams,
 }: {
@@ -36,29 +68,44 @@ export default async function KlippekortPage({
   const params = await searchParams;
   const config = getConfig();
   const session = await readSession();
-  const card = session?.customerId
-    ? await loadByCustomerId(session.customerId)
-    : null;
-  const status = statusOf(card);
+
+  // Annonsen brukeren var på vei til før innloggingen, båret hit i URL-en.
+  const pendingFinnkode =
+    typeof params.finn === "string" && /^\d{8,10}$/.test(params.finn)
+      ? params.finn
+      : null;
+
+  let status = EMPTY_STATUS;
+  let databaseDown = false;
+  if (session) {
+    try {
+      status = await loadStatus(session.userId);
+    } catch (error) {
+      console.error("klippekort: kunne ikke lese kortet", error);
+      databaseDown = true;
+    }
+  }
+
+  const notices = Object.entries(NOTICES).filter(([key]) => {
+    const [name, value] = key.split("=");
+    return params[name] === value;
+  });
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
-      {params.kjop === "ok" ? (
-        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-positive/25 bg-positive/10 p-4 text-sm text-positive">
-          <Check className="size-5 shrink-0" aria-hidden />
-          <p>
-            Betalingen er fullført. {KLIPP_PER_KJOP} klipp er lagt til
-            klippekortet ditt.
-          </p>
+      {notices.map(([key, notice]) => (
+        <div
+          key={key}
+          className={`mb-4 flex items-center gap-3 rounded-2xl border p-4 text-sm ${TONE_CLASS[notice.tone]}`}
+        >
+          {notice.tone === "ok" ? (
+            <Check className="size-5 shrink-0" aria-hidden />
+          ) : null}
+          <p>{notice.text}</p>
         </div>
-      ) : null}
-      {params.kjop === "feilet" ? (
-        <p className="mb-8 rounded-2xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive">
-          Vi kunne ikke bekrefte kjøpet. Kontakt oss hvis beløpet er trukket.
-        </p>
-      ) : null}
+      ))}
       {params.import ? (
-        <p className="mb-8 rounded-2xl border border-warning/25 bg-warning/10 p-4 text-sm text-warning">
+        <p className="mb-4 rounded-2xl border border-warning/25 bg-warning/10 p-4 text-sm text-warning">
           Klippekortet er aktivert, men annonsen kunne ikke hentes. Det ble
           ikke brukt et klipp.
         </p>
@@ -82,7 +129,12 @@ export default async function KlippekortPage({
           <Ticket className="size-8 text-cta" aria-hidden />
         </div>
 
-        {status.expiresAt ? (
+        {databaseDown ? (
+          <p className="mt-5 text-sm text-destructive">
+            Vi får ikke kontakt med databasen akkurat nå, så saldoen kan være
+            feil. Prøv igjen om litt.
+          </p>
+        ) : status.expiresAt ? (
           <p className="mt-5 text-sm text-muted-foreground">
             De neste klippene utløper {formatDate(status.expiresAt)}.
           </p>
@@ -106,8 +158,9 @@ export default async function KlippekortPage({
 
         {config.features.payments ? (
           <KlippekortActions
-            loginEnabled={config.features.login}
-            loggedIn={Boolean(session?.vippsSub)}
+            loggedIn={Boolean(session)}
+            remaining={status.remaining}
+            finnkode={pendingFinnkode}
           />
         ) : (
           <p className="mt-6 text-sm text-muted-foreground">
@@ -123,8 +176,8 @@ export default async function KlippekortPage({
       </div>
 
       <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-        Klippene er gyldige i {KLIPP_GYLDIGHET_MANEDER} måneder fra hvert kjøp.
-        Uten innlogging er klippekortet knyttet til denne nettleseren.{" "}
+        Klippene er gyldige i {KLIPP_GYLDIGHET_MANEDER} måneder fra hvert kjøp
+        og er knyttet til Vipps-brukeren din.{" "}
         <Link href="/vilkar#tjenester" className="font-medium underline">
           Se salgsvilkårene
         </Link>

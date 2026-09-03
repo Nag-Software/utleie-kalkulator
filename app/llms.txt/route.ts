@@ -49,7 +49,7 @@ ${guideSections}
 
 ## Fakta
 
-- Pris: manuell beregning 0 kr; klippekort med ${KLIPP_PER_KJOP} FINN-importer koster ${KLIPP_PRIS_NOK} NOK (engangsbetaling, ingen abonnement).
+- Pris: manuell beregning 0 kr; klippekort med ${KLIPP_PER_KJOP} FINN-importer koster ${KLIPP_PRIS_NOK} NOK (engangsbetaling, ingen abonnement). Innlogging og betaling skjer med Vipps.
 - Tjenesten gir estimater, ikke finansiell rådgivning.
 - Utgiver: ${COMPANY.legalName} (${COMPANY.legalForm.toLowerCase()}), org.nr. ${COMPANY.organizationNumberFormatted}, ${COMPANY_ADDRESS_LINE}, ${COMPANY.country}. Telefon ${COMPANY.phoneFormatted}, e-post ${COMPANY.email}.
 - Salgsvilkårene dekker parter, betaling, levering, angrerett, retur, reklamasjon og konfliktløsning.

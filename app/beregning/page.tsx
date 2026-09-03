@@ -1,4 +1,3 @@
-import { AlertTriangle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -6,13 +5,7 @@ import {
   hasAnyCalcParam,
 } from "@/components/calculator/url-state";
 import { Button } from "@/components/ui/button";
-import {
-  type CalcInput,
-  DEFAULT_INPUT,
-  parseInputLenient,
-} from "@/lib/calc/schema";
-import { mapFinnToInputs } from "@/lib/finn/map-to-inputs";
-import { loadOrFulfill } from "@/lib/payments/fulfill";
+
 import { BeregningClient } from "./beregning-client";
 
 export const metadata: Metadata = {
@@ -20,24 +13,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Første besøk henter FINN-data og kan refundere — gi god tid
-export const maxDuration = 60;
-
-/** Importerte FINN-tall + brukerens URL-justeringer (kun felt som finnes i URL-en). */
-function mergeUrlOverrides(
-  imported: CalcInput,
-  search: URLSearchParams,
-): CalcInput {
-  const decoded = decodeInputFromParams(search);
-  const merged: CalcInput = { ...imported };
-  for (const key of Object.keys(DEFAULT_INPUT) as (keyof CalcInput)[]) {
-    if (search.has(key)) {
-      (merged as Record<string, unknown>)[key] = decoded[key];
-    }
-  }
-  return parseInputLenient(merged);
-}
-
+/**
+ * Beregningen bor i URL-en. FINN-importen låses opp i `/api/unlock`, som
+ * trekker klippet og sender brukeren hit med tallene som spørreparametre —
+ * så denne siden er ren lesing og trekker aldri et klipp selv. (Det er
+ * bevisst: Next forhåndshenter lenker, og en side som trakk klipp ved
+ * lasting ville brent dem.)
+ */
 function toSearchParams(
   params: Record<string, string | string[] | undefined>,
 ): URLSearchParams {
@@ -48,109 +30,34 @@ function toSearchParams(
   return search;
 }
 
-function InfoState({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto max-w-md px-4 py-20 text-center">
-      <h1 className="text-xl font-semibold">{title}</h1>
-      <div className="mt-2 text-sm text-muted-foreground">{children}</div>
-      <Button asChild className="mt-6">
-        <Link href="/">Til kalkulatoren</Link>
-      </Button>
-    </div>
-  );
-}
-
 export default async function BeregningPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
-  const sessionId =
-    typeof params.session_id === "string" ? params.session_id : null;
+  const search = toSearchParams(await searchParams);
 
-  if (!sessionId) {
-    const search = toSearchParams(params);
-    if (hasAnyCalcParam(search) || search.get("kilde") === "finn") {
-      return (
-        <BeregningClient
-          finn={null}
-          warnings={[]}
-          initialInputs={decodeInputFromParams(search)}
-          importedFromFinn={search.get("kilde") === "finn"}
-        />
-      );
-    }
+  if (hasAnyCalcParam(search) || search.get("kilde") === "finn") {
     return (
-      <InfoState title="Mangler beregning">
-        Hent en FINN-annonse fra forsiden, eller bruk den gratis kalkulatoren
-        med manuelle tall.
-      </InfoState>
+      <BeregningClient
+        finn={null}
+        warnings={[]}
+        initialInputs={decodeInputFromParams(search)}
+        importedFromFinn={search.get("kilde") === "finn"}
+      />
     );
   }
 
-  const lookup = await loadOrFulfill(sessionId);
-
-  switch (lookup.kind) {
-    case "unavailable":
-      return (
-        <InfoState title="Betaling er ikke tilgjengelig ennå">
-          Betalte beregninger lanseres snart. Den manuelle kalkulatoren er
-          gratis i mellomtiden.
-        </InfoState>
-      );
-    case "not_found":
-      return (
-        <InfoState title="Fant ikke beregningen">
-          Kontroller at du bruker hele lenken fra kjøpet.
-        </InfoState>
-      );
-    case "unpaid":
-      return (
-        <InfoState title="Betalingen er ikke fullført">
-          Vi finner ingen gjennomført betaling for denne lenken. Har du avbrutt
-          betalingen, kan du starte på nytt fra forsiden.
-        </InfoState>
-      );
-    case "failed":
-      return (
-        <div className="mx-auto max-w-md px-4 py-20 text-center">
-          <AlertTriangle className="mx-auto size-8 text-destructive" />
-          <h1 className="mt-4 text-xl font-semibold">
-            Vi klarte ikke å hente annonsen fra FINN
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {lookup.code === "NOT_FOUND"
-              ? "Annonsen ser ut til å være solgt eller fjernet."
-              : "Det oppsto en teknisk feil ved henting av annonsen."}{" "}
-            {lookup.refunded
-              ? "Beløpet er automatisk refundert og vises på kontoen din i løpet av få dager."
-              : "Beløpet refunderes. Hører du ikke fra oss, kontakt casper@nagsoftware.no."}
-          </p>
-          <Button asChild className="mt-6">
-            <Link href="/">Prøv med manuelle tall i stedet</Link>
-          </Button>
-        </div>
-      );
-    case "ready": {
-      const search = toSearchParams(params);
-      const initialInputs = mergeUrlOverrides(
-        mapFinnToInputs(lookup.finn.p),
-        search,
-      );
-      return (
-        <BeregningClient
-          finn={lookup.finn.p}
-          warnings={lookup.finn.w}
-          initialInputs={initialInputs}
-        />
-      );
-    }
-  }
+  return (
+    <div className="mx-auto max-w-md px-4 py-20 text-center">
+      <h1 className="text-xl font-semibold">Mangler beregning</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Hent en FINN-annonse fra forsiden, eller bruk den gratis kalkulatoren
+        med manuelle tall.
+      </p>
+      <Button asChild className="mt-6">
+        <Link href="/">Til kalkulatoren</Link>
+      </Button>
+    </div>
+  );
 }

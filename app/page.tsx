@@ -170,7 +170,7 @@ function FinnSection() {
             />
             <p className="flex items-center gap-1.5 text-xs text-white/55">
               <ShieldCheck className="size-3.5" aria-hidden />
-              Sikker betaling med Stripe
+              Betal enkelt med Vipps
             </p>
           </div>
         </div>

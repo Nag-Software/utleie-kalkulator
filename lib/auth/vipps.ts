@@ -1,11 +1,19 @@
 import "server-only";
-import { getConfig } from "@/lib/config";
+import { getConfig, vippsHost } from "@/lib/config";
+import { vippsSystemHeaders } from "@/lib/vipps/token";
 
-function vippsHost(): string {
-  return getConfig().vipps.environment === "production"
-    ? "https://api.vipps.no"
-    : "https://apitest.vipps.no";
-}
+/**
+ * Vipps Login (OIDC authorization code flow).
+ *
+ * Endepunktene er hentet fra Vipps' discovery-dokument
+ * (`/access-management-1.0/access/.well-known/openid-configuration`), ikke
+ * gjettet. Vi ber kun om `openid name`: telefonnummer og e-post trengs ikke
+ * for å eie et klippekort, og da skal vi heller ikke hente dem.
+ *
+ * NB: Login må aktiveres for salgsenheten i Vipps-portalen. Er den ikke
+ * aktivert, svarer autorisasjonsendepunktet «Client not found».
+ */
+const SCOPES = "openid name";
 
 export function vippsAuthorizeUrl(options: {
   state: string;
@@ -19,26 +27,37 @@ export function vippsAuthorizeUrl(options: {
   );
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "openid name");
+  url.searchParams.set("scope", SCOPES);
   url.searchParams.set("state", options.state);
   url.searchParams.set("redirect_uri", options.redirectUri);
   return url.toString();
 }
 
+export interface VippsIdentity {
+  /** Vipps' pseudonyme, stabile bruker-ID. Nøkkelen vi lagrer på. */
+  sub: string;
+  name: string | null;
+}
+
 export async function exchangeVippsCode(options: {
   code: string;
   redirectUri: string;
-}): Promise<{ sub: string; name: string | null } | null> {
-  const { clientId, clientSecret } = getConfig().vipps;
+}): Promise<VippsIdentity | null> {
+  const { clientId, clientSecret, subscriptionKey } = getConfig().vipps;
   if (!clientId || !clientSecret) return null;
 
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const tokenResponse = await fetch(
     `${vippsHost()}/access-management-1.0/access/oauth2/token`,
     {
       method: "POST",
       headers: {
-        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+        Authorization: `Basic ${basic}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        ...(subscriptionKey
+          ? { "Ocp-Apim-Subscription-Key": subscriptionKey }
+          : {}),
+        ...vippsSystemHeaders(),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
@@ -48,22 +67,33 @@ export async function exchangeVippsCode(options: {
       cache: "no-store",
     },
   );
+
   if (!tokenResponse.ok) {
-    console.error("Vipps token exchange failed", tokenResponse.status);
+    console.error(
+      "Vipps token-utveksling feilet",
+      tokenResponse.status,
+      (await tokenResponse.text()).slice(0, 300),
+    );
     return null;
   }
 
   const token = (await tokenResponse.json()) as { access_token?: string };
   if (!token.access_token) return null;
+
   const userResponse = await fetch(
     `${vippsHost()}/vipps-userinfo-api/userinfo`,
     {
-      headers: { Authorization: `Bearer ${token.access_token}` },
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        ...(subscriptionKey
+          ? { "Ocp-Apim-Subscription-Key": subscriptionKey }
+          : {}),
+      },
       cache: "no-store",
     },
   );
   if (!userResponse.ok) {
-    console.error("Vipps userinfo failed", userResponse.status);
+    console.error("Vipps userinfo feilet", userResponse.status);
     return null;
   }
 
@@ -74,6 +104,7 @@ export async function exchangeVippsCode(options: {
     family_name?: string;
   };
   if (!user.sub) return null;
+
   const name =
     user.name?.trim() ||
     [user.given_name, user.family_name].filter(Boolean).join(" ").trim() ||

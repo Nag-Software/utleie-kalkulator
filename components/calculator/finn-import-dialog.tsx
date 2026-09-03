@@ -8,7 +8,8 @@ import {
   ShieldCheck,
   Ticket,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { VippsMark } from "@/components/vipps-mark";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,12 +36,15 @@ interface Me {
   paymentsEnabled: boolean;
   loginEnabled: boolean;
   loggedIn: boolean;
-  klippekort: {
-    remaining: number;
-    total: number;
-    unlocked: string[];
-  };
+  klippekort: { remaining: number; total: number; unlocked: string[] };
 }
+
+const OFFLINE_ME: Me = {
+  paymentsEnabled: false,
+  loginEnabled: false,
+  loggedIn: false,
+  klippekort: { remaining: 0, total: 0, unlocked: [] },
+};
 
 export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -52,41 +56,16 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    fetch("/api/me")
-      .then((response) => response.json())
-      .then((data: Me) => {
-        if (!cancelled) setMe(data);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setMe({
-            paymentsEnabled: false,
-            loginEnabled: false,
-            loggedIn: false,
-            klippekort: { remaining: 0, total: 0, unlocked: [] },
-          });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
-
-  async function fetchPreview() {
+  const loadPreview = useCallback(async (finnUrl: string) => {
     setPhase("previewing");
     setError(null);
     try {
       const response = await fetch("/api/finn/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ finnUrl: url }),
+        body: JSON.stringify({ finnUrl }),
       });
-      const data = (await response.json()) as
-        | FinnPreview
-        | { message: string };
+      const data = (await response.json()) as FinnPreview | { message: string };
       if (!response.ok) {
         setError((data as { message: string }).message ?? "Noe gikk galt.");
         setPhase("input");
@@ -98,7 +77,23 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
       setError("Noe gikk galt. Sjekk nettverket og prøv igjen.");
       setPhase("input");
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetch("/api/me")
+      .then((response) => response.json())
+      .then((data: Me) => {
+        if (!cancelled) setMe(data);
+      })
+      .catch(() => {
+        if (!cancelled) setMe(OFFLINE_ME);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   async function unlock() {
     if (!preview) return;
@@ -133,20 +128,17 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          consent: true,
-          finnkode: preview.finnkode,
-        }),
+        body: JSON.stringify({ consent: true, finnkode: preview.finnkode }),
       });
       const data = (await response.json()) as
-        | { checkoutUrl: string }
+        | { redirectUrl: string }
         | { message: string };
       if (!response.ok) {
         setError((data as { message: string }).message ?? "Noe gikk galt.");
         setPhase("preview");
         return;
       }
-      window.location.href = (data as { checkoutUrl: string }).checkoutUrl;
+      window.location.href = (data as { redirectUrl: string }).redirectUrl;
     } catch {
       setError("Kunne ikke starte betalingen. Prøv igjen.");
       setPhase("preview");
@@ -159,6 +151,11 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
   );
   const canUnlock = remaining > 0 || alreadyUnlocked;
   const busy = phase === "working";
+  // Etter innlogging lander brukeren på klippekortsiden med annonsen i
+  // lomma, så kjøpet der sender ham rett til beregningen han var ute etter.
+  const loginHref = preview
+    ? `/api/auth/login?returnTo=${encodeURIComponent(`/klippekort?finn=${preview.finnkode}`)}`
+    : "/api/auth/login?returnTo=%2Fklippekort";
 
   return (
     <Dialog
@@ -204,7 +201,7 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
             className="space-y-3"
             onSubmit={(event) => {
               event.preventDefault();
-              if (url.trim()) void fetchPreview();
+              if (url.trim()) void loadPreview(url);
             }}
           >
             <div className="space-y-1.5">
@@ -310,6 +307,21 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
                     : `Du har ${remaining} klipp igjen.`}
                 </p>
               </>
+            ) : !me.loggedIn ? (
+              // Klippekortet eies av en Vipps-bruker, så innlogging kommer
+              // først. Den varer i over et år, så dette skjer én gang.
+              <>
+                <Button variant="cta" size="lg" className="w-full" asChild>
+                  <a href={loginHref}>
+                    <VippsMark data-slot="icon" />
+                    Fortsett med Vipps
+                  </a>
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Vi tar vare på annonsen mens du logger inn. Klippene følger
+                  Vipps-brukeren din, så de virker på alle enhetene dine.
+                </p>
+              </>
             ) : (
               <>
                 <label className="flex items-start gap-2.5 text-xs text-muted-foreground">
@@ -343,30 +355,20 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
                   {busy ? (
                     <Loader2 data-slot="icon" className="animate-spin" />
                   ) : (
-                    <Ticket data-slot="icon" />
+                    <VippsMark data-slot="icon" />
                   )}
-                  Kjøp {KLIPP_PER_KJOP} klipp – {KLIPP_PRIS_NOK} kr
+                  Betal {KLIPP_PRIS_NOK} kr med Vipps
                 </Button>
                 <div className="space-y-1.5 text-center text-xs text-muted-foreground">
                   <p className="flex items-center justify-center gap-1.5">
                     <ShieldCheck className="size-3.5" aria-hidden />
-                    Engangsbetaling · gyldig {KLIPP_GYLDIGHET_MANEDER} måneder
+                    {KLIPP_PER_KJOP} klipp · engangsbetaling · gyldig{" "}
+                    {KLIPP_GYLDIGHET_MANEDER} måneder
                   </p>
                   <p>
                     Selger: {COMPANY.legalName}, org.nr.{" "}
                     {COMPANY.organizationNumberFormatted}
                   </p>
-                  {me.loginEnabled && !me.loggedIn ? (
-                    <p>
-                      <a
-                        href="/api/auth/login?returnTo=%2F"
-                        className="font-medium text-foreground underline"
-                      >
-                        Logg inn
-                      </a>{" "}
-                      for å bruke klippene på flere enheter.
-                    </p>
-                  ) : null}
                 </div>
               </>
             )}

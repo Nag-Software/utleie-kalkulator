@@ -1,19 +1,11 @@
 import "server-only";
 import { encodeInputToParams } from "@/components/calculator/url-state";
+import { consumeClip, loadStatus } from "@/lib/db/klippekort";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
 import { mapFinnToInputs } from "@/lib/finn/map-to-inputs";
-import { consumeKlipp } from "@/lib/payments/klippekort-core";
-import {
-  loadByCustomerId,
-  saveKort,
-} from "@/lib/payments/klippekort";
 
 export type UnlockResult =
-  | {
-      ok: true;
-      calculationUrl: string;
-      alreadyUnlocked: boolean;
-    }
+  | { ok: true; calculationUrl: string; alreadyUnlocked: boolean; remaining: number }
   | {
       ok: false;
       reason:
@@ -25,15 +17,23 @@ export type UnlockResult =
         | "parse_failed";
     };
 
+/**
+ * Låser opp én FINN-annonse.
+ *
+ * Rekkefølgen er bevisst: annonsen hentes FØR klippet trekkes, så en solgt
+ * eller fjernet annonse aldri koster brukeren et klipp. Saldoen sjekkes
+ * likevel først, slik at vi ikke belaster FINN for en bruker som ikke har
+ * klipp å bruke.
+ */
 export async function unlockFinn(
-  customerId: string,
+  userId: string,
   finnkode: string,
 ): Promise<UnlockResult> {
-  const beforeFetch = consumeKlipp(
-    await loadByCustomerId(customerId),
-    finnkode,
-  );
-  if (!beforeFetch.ok) return { ok: false, reason: beforeFetch.reason };
+  const status = await loadStatus(userId);
+  const alreadyUnlocked = status.unlocked.includes(finnkode);
+  if (!alreadyUnlocked && status.remaining <= 0) {
+    return { ok: false, reason: status.expired ? "expired" : "empty" };
+  }
 
   let outcome;
   try {
@@ -55,15 +55,10 @@ export async function unlockFinn(
     return { ok: false, reason: "parse_failed" };
   }
 
-  // Last inn saldoen på nytt etter nettverkskallet for å redusere
-  // sannsynligheten for at parallelle forespørsler overskriver hverandre.
-  const consumed = consumeKlipp(
-    await loadByCustomerId(customerId),
-    finnkode,
-  );
-  if (!consumed.ok) return { ok: false, reason: consumed.reason };
-  if (!consumed.alreadyUnlocked) {
-    await saveKort(customerId, consumed.kort);
+  // Annonsen finnes: nå er det trygt å trekke klippet.
+  const consumed = await consumeClip(userId, finnkode);
+  if (consumed.outcome === "expired" || consumed.outcome === "empty") {
+    return { ok: false, reason: consumed.outcome };
   }
 
   const params = encodeInputToParams(mapFinnToInputs(outcome.parsed));
@@ -71,6 +66,7 @@ export async function unlockFinn(
   return {
     ok: true,
     calculationUrl: `/beregning?${params.toString()}`,
-    alreadyUnlocked: consumed.alreadyUnlocked,
+    alreadyUnlocked: consumed.outcome === "already_unlocked",
+    remaining: consumed.remaining,
   };
 }
