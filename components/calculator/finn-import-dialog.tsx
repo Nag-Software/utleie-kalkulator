@@ -345,12 +345,12 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
                   ) : (
                     <VippsMark data-slot="icon" />
                   )}
-                  Betal {KLIPP_PRIS_NOK} kr med Vipps
+                  Kjøp {KLIPP_PER_KJOP} klipp – {KLIPP_PRIS_NOK} kr med Vipps
                 </Button>
                 <div className="space-y-1.5 text-center text-xs text-muted-foreground">
                   <p className="flex items-center justify-center gap-1.5">
                     <ShieldCheck className="size-3.5" aria-hidden />
-                    {KLIPP_PER_KJOP} klipp · engangsbetaling · gyldig{" "}
+                    Ett klipp per annonse · engangsbetaling · gyldig{" "}
                     {KLIPP_GYLDIGHET_MANEDER} måneder
                   </p>
                   <p>
