@@ -4,8 +4,13 @@ export const SITE_NAME = "Utleie-kalkulator";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://utleie-kalkulator.no";
 export const CONTACT_EMAIL = "casper@nagsoftware.no";
-export const PRICE_NOK = "9,90";
-export const PRICE_ORE = 990;
+
+/** Klippekort: én engangsbetaling gir flere FINN-importer. */
+export const KLIPP_PER_KJOP = 20;
+export const KLIPP_PRIS_NOK = "49";
+export const PRICE_NOK = KLIPP_PRIS_NOK;
+export const KLIPP_PRIS_ORE = 4900;
+export const KLIPP_GYLDIGHET_MANEDER = 12;
 
 /**
  * Selskapsidentifikasjon. Kravene til betalingsleverandører (bl.a. Vipps
