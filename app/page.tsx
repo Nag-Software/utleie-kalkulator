@@ -13,7 +13,11 @@ import {
   webApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonld";
-import { PRICE_NOK } from "@/lib/site";
+import {
+  KLIPP_GYLDIGHET_MANEDER,
+  KLIPP_PER_KJOP,
+  KLIPP_PRIS_NOK,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -116,7 +120,7 @@ function FinnSection() {
   const points = [
     "Kjøpesum, felleskostnader, fellesgjeld og omkostninger fylles ut automatisk",
     "Riktig eieform og dokumentavgift settes fra annonsen",
-    "Automatisk refusjon hvis annonsen ikke kan hentes",
+    "Ingen klipp trekkes hvis annonsen ikke kan hentes",
   ];
   return (
     <Section aria-labelledby="finn-import" className="py-6 sm:py-10">
@@ -150,11 +154,10 @@ function FinnSection() {
           </div>
           <div className="flex flex-col items-start gap-4 lg:w-64">
             <p>
-              <span className="display text-5xl">
-                {PRICE_NOK} kr
-              </span>
+              <span className="display text-5xl">{KLIPP_PRIS_NOK} kr</span>
               <span className="mt-1.5 block text-sm text-white/60">
-                per beregning · ingen konto
+                {KLIPP_PER_KJOP} annonser · gyldig{" "}
+                {KLIPP_GYLDIGHET_MANEDER} måneder
               </span>
             </p>
             <FinnImportDialog
@@ -305,8 +308,8 @@ function AboutCalculator() {
             Utleiekalkulatoren er gratis å bruke, krever ingen registrering og
             lagrer ingenting: beregningen ligger i lenken, som du kan dele med
             medinvestor, partner eller banken. Vil du slippe å taste inn tallene
-            selv, henter vi dem automatisk fra en FINN-annonse for {PRICE_NOK}{" "}
-            kr.
+            selv, koster et klippekort med {KLIPP_PER_KJOP} FINN-importer{" "}
+            {KLIPP_PRIS_NOK} kr.
           </p>
         </div>
       </div>

@@ -1,7 +1,10 @@
 import { AlertTriangle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { decodeInputFromParams } from "@/components/calculator/url-state";
+import {
+  decodeInputFromParams,
+  hasAnyCalcParam,
+} from "@/components/calculator/url-state";
 import { Button } from "@/components/ui/button";
 import {
   type CalcInput,
@@ -35,6 +38,16 @@ function mergeUrlOverrides(
   return parseInputLenient(merged);
 }
 
+function toSearchParams(
+  params: Record<string, string | string[] | undefined>,
+): URLSearchParams {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string") search.set(key, value);
+  }
+  return search;
+}
+
 function InfoState({
   title,
   children,
@@ -63,11 +76,21 @@ export default async function BeregningPage({
     typeof params.session_id === "string" ? params.session_id : null;
 
   if (!sessionId) {
+    const search = toSearchParams(params);
+    if (hasAnyCalcParam(search) || search.get("kilde") === "finn") {
+      return (
+        <BeregningClient
+          finn={null}
+          warnings={[]}
+          initialInputs={decodeInputFromParams(search)}
+          importedFromFinn={search.get("kilde") === "finn"}
+        />
+      );
+    }
     return (
-      <InfoState title="Mangler betalingsreferanse">
-        Lenken til en betalt beregning inneholder en betalingsreferanse. Bruk
-        hele lenken du fikk etter kjøpet, eller start en ny beregning fra
-        forsiden.
+      <InfoState title="Mangler beregning">
+        Hent en FINN-annonse fra forsiden, eller bruk den gratis kalkulatoren
+        med manuelle tall.
       </InfoState>
     );
   }
@@ -107,7 +130,7 @@ export default async function BeregningPage({
               ? "Annonsen ser ut til å være solgt eller fjernet."
               : "Det oppsto en teknisk feil ved henting av annonsen."}{" "}
             {lookup.refunded
-              ? "Beløpet på 9,90 kr er automatisk refundert og vises på kontoen din i løpet av få dager."
+              ? "Beløpet er automatisk refundert og vises på kontoen din i løpet av få dager."
               : "Beløpet refunderes. Hører du ikke fra oss, kontakt casper@nagsoftware.no."}
           </p>
           <Button asChild className="mt-6">
@@ -116,10 +139,7 @@ export default async function BeregningPage({
         </div>
       );
     case "ready": {
-      const search = new URLSearchParams();
-      for (const [key, value] of Object.entries(params)) {
-        if (typeof value === "string") search.set(key, value);
-      }
+      const search = toSearchParams(params);
       const initialInputs = mergeUrlOverrides(
         mapFinnToInputs(lookup.finn.p),
         search,

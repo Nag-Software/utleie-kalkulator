@@ -3,5 +3,8 @@ import { getConfig } from "@/lib/config";
 
 export function GET() {
   const { features } = getConfig();
-  return NextResponse.json({ paymentsEnabled: features.payments });
+  return NextResponse.json({
+    paymentsEnabled: features.payments,
+    loginEnabled: features.login,
+  });
 }

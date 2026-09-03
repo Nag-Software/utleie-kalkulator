@@ -1,5 +1,12 @@
 import { GUIDE_CATEGORIES, GUIDES } from "@/lib/guides";
-import { COMPANY, COMPANY_ADDRESS_LINE, SITE_URL } from "@/lib/site";
+import {
+  COMPANY,
+  COMPANY_ADDRESS_LINE,
+  KLIPP_GYLDIGHET_MANEDER,
+  KLIPP_PER_KJOP,
+  KLIPP_PRIS_NOK,
+  SITE_URL,
+} from "@/lib/site";
 
 // Genereres fra guide-registeret ved build, så listen aldri blir stående
 // utdatert når det kommer nye guider. Erstatter tidligere public/llms.txt.
@@ -22,13 +29,13 @@ export function GET() {
 
   const body = `# Utleie-kalkulator
 
-> Norsk lønnsomhetskalkulator for utleiebolig på utleie-kalkulator.no. Beregner kontantstrøm per måned etter skatt, brutto/netto yield, cash-on-cash, break-even-leie, break-even-rente, amortisering og flerårig prognose. Gratis med manuelle tall, uten konto. Import av nøkkeltall fra en FINN.no-boligannonse koster 9,90 NOK per beregning.
+> Norsk lønnsomhetskalkulator for utleiebolig på utleie-kalkulator.no. Beregner kontantstrøm per måned etter skatt, brutto/netto yield, cash-on-cash, break-even-leie, break-even-rente, amortisering og flerårig prognose. Gratis med manuelle tall. Et klippekort med ${KLIPP_PER_KJOP} FINN-importer koster ${KLIPP_PRIS_NOK} NOK og er gyldig i ${KLIPP_GYLDIGHET_MANEDER} måneder.
 
 ## Hva tjenesten gjør
 
 - Alle parametere er justerbare: kjøpesum, eieform (selveier/andel — dokumentavgift 2,5 % beregnes automatisk for selveier), fellesgjeld, omkostninger, oppussing, egenkapital, nominell rente, løpetid, avdragsfrihet, annuitets-/serielån, månedsleie, ledighet, leievekst, felleskostnader, kommunale avgifter, eiendomsskatt, forsikring, vedlikehold, forvaltning, skattesats (22 % standard, 0 ved skattefri utleie i egen bolig), rentefradrag, verdistigning og horisont.
 - Resultatene oppdateres umiddelbart og kan deles via lenke (alle tall ligger i URL-en).
-- Betalt FINN-import fyller ut kjøpesum, felleskostnader, fellesgjeld, eieform og omkostninger automatisk fra annonsen. Automatisk refusjon hvis annonsen ikke kan hentes.
+- Betalt FINN-import fyller ut kjøpesum, felleskostnader, fellesgjeld, eieform og omkostninger automatisk fra annonsen. Mislykket henting bruker ikke et klipp.
 
 ## Viktige sider
 
@@ -42,7 +49,7 @@ ${guideSections}
 
 ## Fakta
 
-- Pris: manuell beregning 0 kr; FINN-import 9,90 NOK per beregning (engangsbetaling via Stripe, ingen konto).
+- Pris: manuell beregning 0 kr; klippekort med ${KLIPP_PER_KJOP} FINN-importer koster ${KLIPP_PRIS_NOK} NOK (engangsbetaling, ingen abonnement).
 - Tjenesten gir estimater, ikke finansiell rådgivning.
 - Utgiver: ${COMPANY.legalName} (${COMPANY.legalForm.toLowerCase()}), org.nr. ${COMPANY.organizationNumberFormatted}, ${COMPANY_ADDRESS_LINE}, ${COMPANY.country}. Telefon ${COMPANY.phoneFormatted}, e-post ${COMPANY.email}.
 - Salgsvilkårene dekker parter, betaling, levering, angrerett, retur, reklamasjon og konfliktløsning.

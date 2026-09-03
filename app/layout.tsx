@@ -58,6 +58,7 @@ export const viewport: Viewport = {
 const NAV_LINKS: { href: string; label: string; hideOnMobile?: boolean }[] = [
   { href: "/", label: "Kalkulator" },
   { href: "/guide", label: "Guider" },
+  { href: "/klippekort", label: "Klippekort", hideOnMobile: true },
   { href: "/om", label: "Om", hideOnMobile: true },
 ];
 
@@ -194,6 +195,14 @@ export default function RootLayout({
               <nav aria-label="Om og vilkår" className="text-sm">
                 <p className="text-[13px] font-semibold">Nettstedet</p>
                 <ul className="mt-4 space-y-2.5">
+                  <li>
+                    <Link
+                      href="/klippekort"
+                      className="text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Klippekortet ditt
+                    </Link>
+                  </li>
                   <li>
                     <Link
                       href="/om"

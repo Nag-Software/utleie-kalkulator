@@ -143,8 +143,8 @@ export default function Page() {
         på kontantstrøm etter skatt, med realistisk tomgang – ikke på
         bruttotallet alene. Regn på konkrete objekter i{" "}
         <Link href="/">utleiekalkulatoren</Link>: legg inn leie, tomgang og
-        kostnader, eller hent tallene rett fra FINN-annonsen (9,90
-        kr). Kalkulatoren er ellers gratis og krever ingen konto.
+        kostnader, eller hent tallene rett fra FINN-annonsen. Et klippekort med
+        20 importer koster 49 kr. Kalkulatoren er ellers gratis.
       </p>
     </ArticleLayout>
   );

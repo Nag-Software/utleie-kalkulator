@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, Download, Loader2, Search, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Download,
+  Loader2,
+  Search,
+  ShieldCheck,
+  Ticket,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,33 +22,58 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FinnPreview } from "@/lib/finn/types";
 import { formatNOK } from "@/lib/format";
-import { COMPANY, PRICE_NOK } from "@/lib/site";
+import {
+  COMPANY,
+  KLIPP_GYLDIGHET_MANEDER,
+  KLIPP_PER_KJOP,
+  KLIPP_PRIS_NOK,
+} from "@/lib/site";
 
-type Phase = "input" | "previewing" | "preview" | "paying";
+type Phase = "input" | "previewing" | "preview" | "working";
 
-export function FinnImportDialog({
-  trigger,
-}: {
-  trigger?: React.ReactNode;
-}) {
+interface Me {
+  paymentsEnabled: boolean;
+  loginEnabled: boolean;
+  loggedIn: boolean;
+  klippekort: {
+    remaining: number;
+    total: number;
+    unlocked: string[];
+  };
+}
+
+export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("input");
   const [url, setUrl] = useState("");
   const [preview, setPreview] = useState<FinnPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
-  const [paymentsEnabled, setPaymentsEnabled] = useState<boolean | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (!open || paymentsEnabled !== null) return;
-    fetch("/api/config")
-      .then((r) => r.json())
-      .then((c: { paymentsEnabled: boolean }) =>
-        setPaymentsEnabled(c.paymentsEnabled),
-      )
-      .catch(() => setPaymentsEnabled(false));
-  }, [open, paymentsEnabled]);
+    if (!open) return;
+    let cancelled = false;
+    fetch("/api/me")
+      .then((response) => response.json())
+      .then((data: Me) => {
+        if (!cancelled) setMe(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMe({
+            paymentsEnabled: false,
+            loginEnabled: false,
+            loggedIn: false,
+            klippekort: { remaining: 0, total: 0, unlocked: [] },
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   async function fetchPreview() {
     setPhase("previewing");
@@ -54,7 +86,7 @@ export function FinnImportDialog({
       });
       const data = (await response.json()) as
         | FinnPreview
-        | { error: string; message: string };
+        | { message: string };
       if (!response.ok) {
         setError((data as { message: string }).message ?? "Noe gikk galt.");
         setPhase("input");
@@ -68,19 +100,47 @@ export function FinnImportDialog({
     }
   }
 
-  async function startCheckout() {
+  async function unlock() {
     if (!preview) return;
-    setPhase("paying");
+    setPhase("working");
+    setError(null);
+    try {
+      const response = await fetch("/api/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finnUrl: preview.finnkode }),
+      });
+      const data = (await response.json()) as
+        | { calculationUrl: string }
+        | { message: string };
+      if (!response.ok) {
+        setError((data as { message: string }).message ?? "Noe gikk galt.");
+        setPhase("preview");
+        return;
+      }
+      window.location.href = (data as { calculationUrl: string }).calculationUrl;
+    } catch {
+      setError("Kunne ikke åpne beregningen. Prøv igjen.");
+      setPhase("preview");
+    }
+  }
+
+  async function buy() {
+    if (!preview) return;
+    setPhase("working");
     setError(null);
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ finnkode: preview.finnkode, consent: true }),
+        body: JSON.stringify({
+          consent: true,
+          finnkode: preview.finnkode,
+        }),
       });
       const data = (await response.json()) as
         | { checkoutUrl: string }
-        | { error: string; message: string };
+        | { message: string };
       if (!response.ok) {
         setError((data as { message: string }).message ?? "Noe gikk galt.");
         setPhase("preview");
@@ -93,6 +153,13 @@ export function FinnImportDialog({
     }
   }
 
+  const remaining = me?.klippekort.remaining ?? 0;
+  const alreadyUnlocked = Boolean(
+    preview && me?.klippekort.unlocked.includes(preview.finnkode),
+  );
+  const canUnlock = remaining > 0 || alreadyUnlocked;
+  const busy = phase === "working";
+
   return (
     <Dialog
       open={open}
@@ -103,6 +170,7 @@ export function FinnImportDialog({
           setPreview(null);
           setError(null);
           setConsent(false);
+          setMe(null);
         }
       }}
     >
@@ -119,16 +187,23 @@ export function FinnImportDialog({
           <DialogTitle>Hent tall fra FINN</DialogTitle>
           <DialogDescription>
             Vi leser kjøpesum, felleskostnader, fellesgjeld og omkostninger
-            rett fra annonsen og fyller ut kalkulatoren for deg.
+            fra annonsen og fyller ut kalkulatoren.
           </DialogDescription>
         </DialogHeader>
+
+        {me?.klippekort.total ? (
+          <p className="flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1.5 text-[13px] font-medium">
+            <Ticket className="size-3.5 text-cta" aria-hidden />
+            {remaining} klipp igjen
+          </p>
+        ) : null}
 
         {phase === "input" || phase === "previewing" ? (
           <form
             ref={formRef}
             className="space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
+            onSubmit={(event) => {
+              event.preventDefault();
               if (url.trim()) void fetchPreview();
             }}
           >
@@ -138,7 +213,7 @@ export function FinnImportDialog({
                 id="finn-url"
                 placeholder="https://www.finn.no/…"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(event) => setUrl(event.target.value)}
                 onPaste={() =>
                   setTimeout(() => formRef.current?.requestSubmit(), 50)
                 }
@@ -162,7 +237,7 @@ export function FinnImportDialog({
           </form>
         ) : null}
 
-        {(phase === "preview" || phase === "paying") && preview ? (
+        {(phase === "preview" || phase === "working") && preview ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3 rounded-xl border border-border p-3">
               {preview.imageUrl ? (
@@ -175,7 +250,9 @@ export function FinnImportDialog({
               ) : null}
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
-                  {preview.address ?? preview.title ?? `FINN-kode ${preview.finnkode}`}
+                  {preview.address ??
+                    preview.title ??
+                    `FINN-kode ${preview.finnkode}`}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {[
@@ -199,22 +276,51 @@ export function FinnImportDialog({
               </div>
             </div>
 
-            {paymentsEnabled === false ? (
+            {!me ? (
+              <Button className="w-full" size="lg" disabled>
+                <Loader2 data-slot="icon" className="animate-spin" />
+                Henter klippekort
+              </Button>
+            ) : !me.paymentsEnabled ? (
               <p className="rounded-xl border border-border bg-secondary p-3.5 text-sm">
-                Betaling er ikke tilgjengelig ennå – FINN-import lanseres snart.
-                I mellomtiden kan du bruke den manuelle kalkulatoren gratis.
+                Betaling er ikke tilgjengelig ennå. Den manuelle kalkulatoren
+                er gratis i mellomtiden.
               </p>
+            ) : canUnlock ? (
+              <>
+                <Button
+                  variant="cta"
+                  size="lg"
+                  className="w-full"
+                  disabled={busy}
+                  onClick={() => void unlock()}
+                >
+                  {busy ? (
+                    <Loader2 data-slot="icon" className="animate-spin" />
+                  ) : (
+                    <ArrowRight data-slot="icon" />
+                  )}
+                  {alreadyUnlocked
+                    ? "Åpne beregningen igjen"
+                    : "Hent tallene – bruk 1 klipp"}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  {alreadyUnlocked
+                    ? "Denne annonsen er allerede låst opp og koster ikke et nytt klipp."
+                    : `Du har ${remaining} klipp igjen.`}
+                </p>
+              </>
             ) : (
               <>
                 <label className="flex items-start gap-2.5 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
+                    onChange={(event) => setConsent(event.target.checked)}
                     className="mt-0.5 size-4 accent-[#ff5d30]"
                   />
                   <span>
-                    Jeg samtykker til at leveringen starter umiddelbart, og at
+                    Jeg samtykker til at klippekortet leveres umiddelbart, og at
                     angreretten dermed bortfaller (angrerettloven § 22 n). Jeg
                     har lest{" "}
                     <a
@@ -231,26 +337,36 @@ export function FinnImportDialog({
                   variant="cta"
                   size="lg"
                   className="w-full"
-                  disabled={!consent || phase === "paying"}
-                  onClick={() => void startCheckout()}
+                  disabled={!consent || busy}
+                  onClick={() => void buy()}
                 >
-                  {phase === "paying" ? (
+                  {busy ? (
                     <Loader2 data-slot="icon" className="animate-spin" />
                   ) : (
-                    <ArrowRight data-slot="icon" />
+                    <Ticket data-slot="icon" />
                   )}
-                  Hent tall og beregn – {PRICE_NOK} kr
+                  Kjøp {KLIPP_PER_KJOP} klipp – {KLIPP_PRIS_NOK} kr
                 </Button>
                 <div className="space-y-1.5 text-center text-xs text-muted-foreground">
                   <p className="flex items-center justify-center gap-1.5">
                     <ShieldCheck className="size-3.5" aria-hidden />
-                    Sikker betaling med Stripe · Automatisk refusjon hvis
-                    henting feiler
+                    Engangsbetaling · gyldig {KLIPP_GYLDIGHET_MANEDER} måneder
                   </p>
                   <p>
                     Selger: {COMPANY.legalName}, org.nr.{" "}
                     {COMPANY.organizationNumberFormatted}
                   </p>
+                  {me.loginEnabled && !me.loggedIn ? (
+                    <p>
+                      <a
+                        href="/api/auth/login?returnTo=%2F"
+                        className="font-medium text-foreground underline"
+                      >
+                        Logg inn
+                      </a>{" "}
+                      for å bruke klippene på flere enheter.
+                    </p>
+                  ) : null}
                 </div>
               </>
             )}

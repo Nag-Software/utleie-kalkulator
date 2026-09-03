@@ -1,8 +1,8 @@
 # Utleie-kalkulator.no
 
 Lønnsomhetskalkulator for utleiebolig: kontantstrøm, yield, break-even og
-prognose. Gratis med manuelle tall; import fra FINN-annonse koster 9,90 kr
-per beregning (Stripe, uten konto).
+prognose. Gratis med manuelle tall; et klippekort med 20 FINN-importer koster
+49 kr og er gyldig i 12 måneder.
 
 ## Stack
 
@@ -18,25 +18,24 @@ pnpm test       # vitest: kalkulatormotor, FINN-parser (fixtures), metadata-lage
 pnpm build
 ```
 
-Appen **booter uten nøkler**: uten `STRIPE_SECRET_KEY` viser FINN-dialogen
-«betaling kommer snart». Env-verdier som starter med `PLACEHOLDER` behandles
-som fraværende. Kopier `.env.example` til `.env.local`.
+Appen **booter uten nøkler**: uten `STRIPE_SECRET_KEY` og `SESSION_SECRET`
+viser FINN-dialogen at betaling er utilgjengelig. Env-verdier som starter med
+`PLACEHOLDER` behandles som fraværende. Kopier `.env.example` til `.env.local`.
 
 ## Arkitektur: ingen database
 
-Stripe er eneste sannhetskilde for betalte beregninger:
+Stripe er sannhetskilde for klippekort:
 
-1. **Kjøp:** `/api/checkout` oppretter en Checkout Session med `finnkode` i
-   metadata. Kvitteringslenken er `/beregning?session_id=cs_…` — selve
-   session-id-en er tilgangsnøkkelen.
-2. **Første visning:** serveren verifiserer betalingen mot Stripe, henter
-   FINN-annonsen og skriver parsede tall inn i PaymentIntent-metadata
-   (chunket JSON, `lib/payments/metadata.ts`). Refresh og senere besøk leser
-   derfra — fungerer selv om annonsen senere slettes fra FINN.
-3. **Feil → refusjon:** hard FINN-feil ved første henting refunderer beløpet
-   automatisk og merker betalingen `refunded:<KODE>`.
-4. **Justeringer og deling:** alle kalkulatorverdier ligger i URL-en (gratis
-   og betalt). Ingen webhook, ingen cron, ingen server-lagring av persondata.
+1. **Kjøp:** `/api/checkout` selger 20 klipp for 49 kr. Returruten verifiserer
+   betalingen før klippene krediteres idempotent.
+2. **Saldo:** Klipp, utløpsdatoer og opplåste FINN-koder lagres i Stripe
+   Customer-metadata. En signert `httpOnly`-cookie inneholder kundereferansen.
+3. **Bruk:** `/api/unlock` henter annonsen først og trekker deretter ett klipp.
+   Feilet henting koster ingenting; samme FINN-kode kan åpnes igjen gratis.
+4. **Beregning og deling:** Importerte kalkulatorverdier legges i URL-en, slik
+   at resultatet kan deles uten å dele klippekortet.
+5. **Innlogging:** Vipps Login er valgfritt og knytter kundereferansen til en
+   pseudonym Vipps-ID, slik at kortet kan brukes på flere enheter.
 
 Øvrige notater:
 
@@ -50,10 +49,11 @@ Stripe er eneste sannhetskilde for betalte beregninger:
 
 ## Aktivering av nøkler (ingen kodeendringer)
 
-1. **Stripe:** Sett `STRIPE_SECRET_KEY` i Vercel (erstatt PLACEHOLDER).
-   Ingen webhook å registrere.
+1. **Stripe:** Sett `STRIPE_SECRET_KEY` og `SESSION_SECRET` i Vercel.
+2. **Vipps Login:** Sett klient-ID og klienthemmelighet, og registrer
+   `/api/auth/vipps/callback` som redirect-URI.
 
 ## Dev-verktøy
 
-- `FINN_FORCE_ERROR=BLOCKED pnpm dev` — test refusjonsstien.
+- `FINN_FORCE_ERROR=BLOCKED pnpm dev` — test at feil ikke bruker klipp.
 - Stripe test-modus + testkort `4242 4242 4242 4242` for hele kjøpsflyten.

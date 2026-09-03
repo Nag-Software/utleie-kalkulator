@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Pill } from "@/components/site/primitives";
-import { COMPANY, CONTACT_EMAIL, PRICE_NOK } from "@/lib/site";
+import {
+  COMPANY,
+  CONTACT_EMAIL,
+  KLIPP_GYLDIGHET_MANEDER,
+  KLIPP_PER_KJOP,
+  KLIPP_PRIS_NOK,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Salgsvilkår",
@@ -17,9 +23,9 @@ const SERVICES = [
     price: "0 kr",
   },
   {
-    name: "FINN-import",
-    what: "Kjøpesum, felleskostnader, fellesgjeld, eieform og omkostninger hentes automatisk fra én FINN-annonse du oppgir, og fyller ut kalkulatoren.",
-    price: `${PRICE_NOK} kr per beregning`,
+    name: "Klippekort for FINN-import",
+    what: `${KLIPP_PER_KJOP} klipp som kan brukes til å hente kjøpesum, felleskostnader, fellesgjeld, eieform og omkostninger fra FINN-annonser. Ett klipp brukes per ny annonse; samme annonse kan åpnes igjen uten nytt klipp. Hvert kjøp er gyldig i ${KLIPP_GYLDIGHET_MANEDER} måneder.`,
+    price: `${KLIPP_PRIS_NOK} kr for ${KLIPP_PER_KJOP} klipp`,
   },
 ];
 
@@ -71,7 +77,8 @@ export default function VilkarPage() {
           <strong>digitalt beregningsverktøy</strong> for å estimere
           lønnsomheten ved å eie og leie ut bolig. Vi formidler, selger eller
           leier <em>ikke</em> ut boliger, lokaler eller andre gjenstander, og er
-          ikke part i noe leieforhold. Det eneste du kjøper er en beregning.
+          ikke part i noe leieforhold. Det betalte produktet er et klippekort
+          for automatisk import av annonsetall til beregninger.
         </p>
         <div className="my-6 overflow-x-auto">
           <table>
@@ -114,8 +121,9 @@ export default function VilkarPage() {
         </p>
         <p>
           Beløpet belastes når bestillingen bekreftes. Kvittering sendes på
-          e-post fra betalingsleverandøren, og lenken du får etter kjøpet gir
-          deg tilgang til beregningen din.
+          e-post fra betalingsleverandøren. Klippekortet aktiveres etter
+          gjennomført betaling og gir tilgang til {KLIPP_PER_KJOP}{" "}
+          FINN-importer.
         </p>
 
         <h2 id="abonnement">4. Bindingstid, oppsigelse og endringer</h2>
@@ -147,9 +155,9 @@ export default function VilkarPage() {
         <p>
           Tjenesten er digital og leveres <strong>umiddelbart</strong> på
           nettstedet – normalt innen få sekunder etter gjennomført betaling. Du
-          sendes rett til beregningen, og lenken til den er din kvittering på
-          leveringen. Ingenting sendes fysisk, og det påløper ingen
-          fraktkostnad.
+          får tilgang til klippekortet. Klipp fra hvert kjøp er gyldige i{" "}
+          {KLIPP_GYLDIGHET_MANEDER} måneder fra kjøpsdatoen. Ingenting sendes
+          fysisk, og det påløper ingen fraktkostnad.
         </p>
         <p>
           Skulle leveringen svikte av tekniske årsaker, kontakt oss på{" "}
@@ -191,10 +199,9 @@ export default function VilkarPage() {
           innen 14 dager.
         </p>
         <p>
-          <strong>Automatisk refusjon ved mislykket FINN-henting:</strong>{" "}
-          Klarer vi ikke å hente annonsen fra FINN – for eksempel fordi den er
-          solgt eller fjernet – refunderes hele beløpet automatisk uten at du
-          trenger å be om det.
+          <strong>Mislykket FINN-henting:</strong> Klarer vi ikke å hente
+          annonsen fra FINN – for eksempel fordi den er solgt eller fjernet –
+          brukes det ikke et klipp.
         </p>
 
         <h2 id="reklamasjon">8. Reklamasjon</h2>
@@ -274,8 +281,8 @@ export default function VilkarPage() {
           Tjenesten leveres «som den er». {COMPANY.legalName} er ikke ansvarlig
           for tap som følge av beslutninger tatt på grunnlag av beregningene, ut
           over det som følger av ufravikelig lovgivning. Vårt samlede ansvar er
-          uansett begrenset til beløpet du har betalt for den aktuelle
-          beregningen.
+          uansett begrenset til beløpet du har betalt for det aktuelle
+          klippekortet.
         </p>
 
         <h2 id="datakilder">11. Datakilder og immaterielle rettigheter</h2>

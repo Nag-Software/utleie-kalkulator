@@ -130,8 +130,7 @@ export default function Page() {
         kostnader inn i utleiekalkulatoren, så får du kontantstrøm etter
         skatt, yield og break-even-leie for den konkrete boligen – gratis og
         uten konto. Vurderer du en bolig som ligger ute nå, kan du importere
-        FINN-annonsen direkte og få alle tallene fylt ut automatisk
-        (9,90 kr).
+        FINN-annonsen direkte. Et klippekort med 20 importer koster 49 kr.
       </p>
 
       <h2>Kilder</h2>

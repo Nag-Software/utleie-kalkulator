@@ -58,15 +58,17 @@ function FinnInfoCard({
 }
 
 export interface BeregningClientProps {
-  finn: FinnParsedData;
+  finn: FinnParsedData | null;
   warnings: string[];
   initialInputs: CalcInput;
+  importedFromFinn?: boolean;
 }
 
 export function BeregningClient({
   finn,
   warnings,
   initialInputs,
+  importedFromFinn = Boolean(finn),
 }: BeregningClientProps) {
   async function copyLink() {
     try {
@@ -84,7 +86,7 @@ export function BeregningClient({
           <span className="eyebrow">FINN-beregning</span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-positive/25 bg-positive/10 px-2.5 py-1 text-[11px] font-medium text-positive">
             <Check className="size-3" />
-            Betalt
+            {importedFromFinn ? "Hentet fra FINN" : "Beregning"}
           </span>
         </div>
         <Button variant="outline" size="sm" onClick={copyLink}>
@@ -93,7 +95,7 @@ export function BeregningClient({
         </Button>
       </div>
 
-      <FinnInfoCard finn={finn} warnings={warnings} />
+      {finn ? <FinnInfoCard finn={finn} warnings={warnings} /> : null}
 
       <Calculator initialInput={initialInputs} urlSync />
     </div>

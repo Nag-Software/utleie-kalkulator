@@ -148,11 +148,10 @@ export default function KontaktPage() {
         <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-muted-foreground">
           <p>
             <strong className="text-foreground">
-              Kjøp, kvittering eller refusjon:
+              Kjøp, kvittering eller klippekort:
             </strong>{" "}
-            Send e-post med lenken du fikk etter kjøpet, eller kvitteringen fra
-            Stripe. Klarer vi ikke å hente FINN-annonsen, refunderes beløpet
-            automatisk – du trenger ikke gjøre noe.
+            Send e-post med kvitteringen fra betalingsleverandøren. Klarer vi
+            ikke å hente FINN-annonsen, brukes det ikke et klipp.
           </p>
           <p>
             <strong className="text-foreground">

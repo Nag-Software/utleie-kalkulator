@@ -4,7 +4,7 @@ import { COMPANY, CONTACT_EMAIL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Personvernerklæring",
   description:
-    "Slik behandler utleie-kalkulator.no opplysninger: ingen konto, ingen sporing, anonyme beregninger.",
+    "Slik behandler utleie-kalkulator.no opplysninger ved beregninger, klippekort, betaling og valgfri innlogging.",
   alternates: { canonical: "/personvern" },
   robots: { index: true, follow: true },
 };
@@ -15,7 +15,7 @@ export default function PersonvernPage() {
       <article className="article">
         <h1 className="display text-[clamp(2rem,5vw,2.75rem)]">Personvernerklæring</h1>
         <p className="mt-3">
-          Sist oppdatert 26. august 2026.
+          Sist oppdatert 3. september 2026.
         </p>
         <p>
           <strong>Behandlingsansvarlig</strong> er {COMPANY.legalName}, org.nr.{" "}
@@ -28,11 +28,15 @@ export default function PersonvernPage() {
 
         <h2>Kort versjon</h2>
         <ul>
-          <li>Ingen brukerkonto, ingen profilering, ingen annonsesporing.</li>
+          <li>Ingen profilering eller annonsesporing.</li>
           <li>
             Beregninger er anonyme tall om en bolig – ikke personopplysninger.
           </li>
-          <li>Betaling håndteres av Stripe; vi ser aldri kortnummeret ditt.</li>
+          <li>
+            Betaling håndteres av betalingsleverandøren; vi ser aldri
+            kortnummeret ditt.
+          </li>
+          <li>Vipps-innlogging er valgfri når den er tilgjengelig.</li>
         </ul>
 
         <h2>Hva vi behandler</h2>
@@ -46,10 +50,14 @@ export default function PersonvernPage() {
           <li>
             <strong>Betaling:</strong> Kjøp gjennomføres hos Stripe, som
             behandler kort- og kontaktopplysninger som selvstendig
-            behandlingsansvarlig. Ved kjøp av en FINN-beregning lagres
-            boligtallene fra annonsen som del av
-            betalingsoppføringen hos Stripe – dette er opplysninger om en
-            bolig, ikke om deg.
+            behandlingsansvarlig. Klippekortsaldo, utløpsdato og en liste over
+            FINN-koder du har låst opp, lagres i metadata på kundereferansen
+            hos Stripe. Dette er nødvendig for å levere klippekortet.
+          </li>
+          <li>
+            <strong>Valgfri Vipps-innlogging:</strong> Logger du inn, ber vi om
+            <code>openid</code> og navn. Vi mottar en pseudonym bruker-ID og
+            navnet ditt, slik at klippekortet kan brukes på flere enheter.
           </li>
           <li>
             <strong>Misbruksvern:</strong> IP-adresser brukes kun flyktig i
@@ -63,16 +71,17 @@ export default function PersonvernPage() {
 
         <h2>Informasjonskapsler</h2>
         <p>
-          Nettsiden setter ingen sporings- eller analysekapsler. Eventuelle
-          kapsler fra Stripe settes først når du går til betalingssiden deres.
+          Nettsiden bruker en nødvendig, signert og <code>httpOnly</code>{" "}
+          informasjonskapsel for å knytte nettleseren til klippekortet og
+          eventuell innlogging. Den kan ikke brukes til annonsesporing. En
+          kortvarig sikkerhetskapsel brukes under Vipps-innlogging. Stripe kan
+          sette egne kapsler når du går til betalingssiden.
         </p>
 
         <h2>Dine rettigheter</h2>
         <p>
-          Siden vi ikke kan knytte beregninger til deg som person, har vi
-          normalt ingen personopplysninger å utlevere eller slette. Har du
-          spørsmål, eller ønsker du en betalt beregning slettet (oppgi lenken),
-          kontakt oss på{" "}
+          Du kan be om innsyn, retting eller sletting av opplysninger knyttet
+          til klippekortet eller innloggingen. Kontakt oss på{" "}
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Du
           har rett til å klage til Datatilsynet.
         </p>

@@ -8,7 +8,6 @@ export const CONTACT_EMAIL = "casper@nagsoftware.no";
 /** Klippekort: én engangsbetaling gir flere FINN-importer. */
 export const KLIPP_PER_KJOP = 20;
 export const KLIPP_PRIS_NOK = "49";
-export const PRICE_NOK = KLIPP_PRIS_NOK;
 export const KLIPP_PRIS_ORE = 4900;
 export const KLIPP_GYLDIGHET_MANEDER = 12;
 
