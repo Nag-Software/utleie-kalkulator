@@ -43,12 +43,27 @@ create table if not exists public.users (
   last_seen_at timestamptz not null default now()
 );
 
+-- Én bruker kan ha flere Vipps-«sub»-er. Vipps garanterer ikke skriftlig at
+-- `sub` fra Login er den samme som `sub` fra profildeling i ePayment, så vi
+-- lagrer dem som identiteter som peker på samme bruker. Er de like, får
+-- brukeren bare én rad her, og ingenting går tapt.
+create table if not exists public.user_identities (
+  sub        text primary key,
+  user_id    uuid        not null references public.users (id) on delete cascade,
+  source     text        not null check (source in ('login', 'payment')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists user_identities_user on public.user_identities (user_id);
+
 -- Ett kjøp = én pott med klipp som brukes opp. `reference` er vår egen
 -- ePayment-referanse og gjør kreditering idempotent. `pending_finnkode` er
 -- annonsen kjøpet gjaldt, så retur-handleren ikke må stole på URL-en.
+-- `user_id` er nullbar: med profildeling i ePayment starter kjøpet FØR vi
+-- vet hvem kunden er. Eieren festes i `complete_purchase`.
 create table if not exists public.purchases (
   id               uuid primary key default gen_random_uuid(),
-  user_id          uuid        not null references public.users (id) on delete cascade,
+  user_id          uuid        references public.users (id) on delete cascade,
   product_id       text        not null references public.products (id),
   reference        text        not null unique,
   amount_ore       integer     not null check (amount_ore >= 0),
@@ -88,6 +103,7 @@ alter table public.products  enable row level security;
 alter table public.users     enable row level security;
 alter table public.purchases enable row level security;
 alter table public.unlocks   enable row level security;
+alter table public.user_identities enable row level security;
 
 -- Må stemme med KLIPP_*-konstantene i lib/site.ts.
 insert into public.products (id, name, clips, price_ore, validity_months)
@@ -111,12 +127,19 @@ as $$
     and p.expires_at > now();
 $$;
 
--- Oppretter eller oppdaterer Vipps-brukeren. Navn/telefon overskrives bare
--- når Vipps faktisk sendte en verdi.
+-- Slår opp brukeren via identitetstabellen. `p_link_user_id` knytter en NY
+-- sub til en bruker vi allerede kjenner (f.eks. når en innlogget bruker
+-- betaler og betalingen gir en annen sub enn innloggingen).
+-- NB: bare denne varianten skal finnes — en 3-argumentsvariant i tillegg
+-- gjør kallet tvetydig fordi de siste parametrene har default-verdi.
+drop function if exists public.upsert_vipps_user(text, text, text);
+
 create or replace function public.upsert_vipps_user(
-  p_vipps_sub text,
-  p_name      text default null,
-  p_phone     text default null
+  p_vipps_sub    text,
+  p_name         text default null,
+  p_phone        text default null,
+  p_source       text default 'login',
+  p_link_user_id uuid default null
 )
 returns uuid
 language plpgsql
@@ -125,13 +148,37 @@ as $$
 declare
   v_id uuid;
 begin
-  insert into public.users (vipps_sub, name, phone_number)
-  values (p_vipps_sub, p_name, p_phone)
-  on conflict (vipps_sub) do update
-    set name         = coalesce(excluded.name, public.users.name),
-        phone_number = coalesce(excluded.phone_number, public.users.phone_number),
+  select ui.user_id into v_id
+  from public.user_identities ui
+  where ui.sub = p_vipps_sub;
+
+  -- Kjent identitet: oppdater det vi har lært, og returner brukeren.
+  if v_id is not null then
+    update public.users u
+    set name         = coalesce(p_name, u.name),
+        phone_number = coalesce(p_phone, u.phone_number),
         last_seen_at = now()
-  returning id into v_id;
+    where u.id = v_id;
+    return v_id;
+  end if;
+
+  -- Ny sub for en bruker vi allerede kjenner: knytt den til samme bruker.
+  if p_link_user_id is not null then
+    v_id := p_link_user_id;
+    update public.users u
+    set name         = coalesce(p_name, u.name),
+        phone_number = coalesce(p_phone, u.phone_number),
+        last_seen_at = now()
+    where u.id = v_id;
+  else
+    insert into public.users (vipps_sub, name, phone_number)
+    values (p_vipps_sub, p_name, p_phone)
+    returning id into v_id;
+  end if;
+
+  insert into public.user_identities (sub, user_id, source)
+  values (p_vipps_sub, v_id, p_source)
+  on conflict (sub) do nothing;
 
   return v_id;
 end;
@@ -172,10 +219,14 @@ end;
 $$;
 
 -- Krediterer klippene etter bekreftet betaling. Idempotent på referansen,
--- og avviser at beløpet Vipps rapporterer avviker fra det vi lagret.
+-- avviser beløpsavvik, og fester eieren på kjøpet hvis den ennå ikke er satt
+-- (anonymt kjøp der identiteten kom fra profildelingen).
+drop function if exists public.complete_purchase(text, integer);
+
 create or replace function public.complete_purchase(
   p_reference  text,
-  p_amount_ore integer
+  p_amount_ore integer,
+  p_user_id    uuid default null
 )
 returns table (
   user_id          uuid,
@@ -191,6 +242,7 @@ as $$
 declare
   v_purchase public.purchases;
   v_months   integer;
+  v_owner    uuid;
 begin
   select * into v_purchase
   from public.purchases p
@@ -199,6 +251,11 @@ begin
 
   if not found then
     raise exception 'Ukjent kjøpsreferanse: %', p_reference;
+  end if;
+
+  v_owner := coalesce(v_purchase.user_id, p_user_id);
+  if v_owner is null then
+    raise exception 'Kjøpet % har ingen eier', p_reference;
   end if;
 
   -- Allerede kreditert: returner tilstanden som den er.
@@ -219,7 +276,8 @@ begin
   from public.products pr where pr.id = v_purchase.product_id;
 
   update public.purchases p
-  set status     = 'paid',
+  set user_id    = v_owner,
+      status     = 'paid',
       remaining  = p.clips,
       paid_at    = now(),
       expires_at = now() + make_interval(months => v_months)
@@ -228,8 +286,8 @@ begin
   into v_purchase.status, v_purchase.clips, v_purchase.expires_at;
 
   return query
-    select v_purchase.user_id, v_purchase.status, v_purchase.clips,
-           public.clips_remaining(v_purchase.user_id), v_purchase.expires_at,
+    select v_owner, v_purchase.status, v_purchase.clips,
+           public.clips_remaining(v_owner), v_purchase.expires_at,
            v_purchase.pending_finnkode;
 end;
 $$;

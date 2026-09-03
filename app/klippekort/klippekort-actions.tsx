@@ -49,23 +49,8 @@ export function KlippekortActions({
     }
   }
 
-  if (!loggedIn) {
-    const returnTo = finnkode ? `/klippekort?finn=${finnkode}` : "/klippekort";
-    return (
-      <div className="mt-7 space-y-3">
-        <Button variant="cta" asChild>
-          <a href={`/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>
-            <VippsMark data-slot="icon" />
-            Logg inn med Vipps
-          </a>
-        </Button>
-        <p className="max-w-md text-sm text-muted-foreground">
-          Klippene følger Vipps-brukeren din, så de virker på alle enhetene
-          dine.
-        </p>
-      </div>
-    );
-  }
+  const returnTo = finnkode ? `/klippekort?finn=${finnkode}` : "/klippekort";
+  const loginHref = `/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`;
 
   // Har han allerede klipp og kom fra en annonse, skal han ikke gjennom
   // kjøpet på nytt — bare bruke et klipp.
@@ -128,9 +113,17 @@ export function KlippekortActions({
           )}
           Kjøp {KLIPP_PER_KJOP} klipp – {KLIPP_PRIS_NOK} kr
         </Button>
-        <Button asChild variant="ghost">
-          <a href="/api/auth/logout">Logg ut</a>
-        </Button>
+        {loggedIn ? (
+          <Button asChild variant="ghost">
+            <a href="/api/auth/logout">Logg ut</a>
+          </Button>
+        ) : (
+          // Kjøp krever ikke innlogging — kontoen opprettes av betalingen.
+          // Innlogging er for den som allerede har klipp på en annen enhet.
+          <Button asChild variant="ghost">
+            <a href={loginHref}>Har du klipp fra før? Logg inn</a>
+          </Button>
+        )}
       </div>
       {finnkode ? (
         <p className="text-sm text-muted-foreground">

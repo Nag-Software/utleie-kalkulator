@@ -7,6 +7,7 @@ import {
   readJsonBody,
   tooManyRequests,
 } from "@/lib/api-helpers";
+import { rememberPendingPayment } from "@/lib/auth/payment-cookie";
 import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
 import { completePurchase, startPurchase } from "@/lib/db/klippekort";
@@ -53,21 +54,16 @@ export async function POST(request: Request) {
   }
   const { finnkode } = parsed.data;
 
-  // Klippekortet eies av en Vipps-bruker, så innlogging må skje først.
+  // Innlogging er IKKE et krav. Er brukeren allerede innlogget, eier han
+  // kjøpet med en gang; ellers starter kjøpet uten eier, og vi lærer hvem
+  // han er av profildelingen når betalingen godkjennes. Det sparer kunden
+  // for et helt Vipps-hopp.
   const session = await readSession();
-  if (!session) {
-    return jsonError(
-      401,
-      "LOGIN_REQUIRED",
-      "Logg inn med Vipps for å kjøpe klippekort.",
-    );
-  }
-
   const reference = newReference();
 
   try {
     await startPurchase({
-      userId: session.userId,
+      userId: session?.userId ?? null,
       productId: KLIPP_PRODUCT_ID,
       reference,
       finnkode,
@@ -75,6 +71,13 @@ export async function POST(request: Request) {
 
     // Lokal utvikling uten Vipps-nøkler (DEV_FAKE_PAYMENTS=1).
     if (config.devFakePayments) {
+      if (!session) {
+        return jsonError(
+          401,
+          "LOGIN_REQUIRED",
+          "DEV_FAKE_PAYMENTS kan ikke gjette hvem du er — logg inn først.",
+        );
+      }
       await completePurchase({ reference, amountOre: KLIPP_PRIS_ORE });
       const unlocked = finnkode
         ? await unlockFinn(session.userId, finnkode)
@@ -92,7 +95,13 @@ export async function POST(request: Request) {
       amountOre: KLIPP_PRIS_ORE,
       description: `Klippekort – ${KLIPP_PER_KJOP} FINN-importer`,
       returnUrl: `${config.siteUrl}/api/vipps/retur?ref=${reference}`,
+      // Vi ber bare om navnet — nok til å eie et klippekort, og ikke mer.
+      profileScope: "name",
     });
+
+    // Binder betalingen til denne nettleseren, så retur-URL-en ikke kan
+    // brukes av andre til å bli logget inn som kjøperen.
+    await rememberPendingPayment(reference);
 
     return NextResponse.json({ redirectUrl });
   } catch (error) {

@@ -170,3 +170,75 @@ begin
   -- ── Opprydding ──────────────────────────────────────────────────────────
   delete from public.users where id in (v_user, v_user2);
 end $$;
+
+-- Anonymt kjøp (profildeling i ePayment): kjøpet starter uten eier, og
+-- identiteten kommer først når betalingen er godkjent. Dekker også at én
+-- bruker kan ha flere Vipps-«sub»-er.
+do $$
+declare
+  v_user uuid; v_user2 uuid; v_out record;
+begin
+  -- Kjøpet starter uten eier
+  perform public.start_purchase(null, 'klippekort-20', 'selftest-anon-1', '100000001');
+  if (select user_id from public.purchases where reference='selftest-anon-1') is not null then
+    raise exception 'FEIL: anonymt kjøp fikk eier for tidlig';
+  end if;
+
+  -- Betalingen gir sub-en; brukeren opprettes og festes på kjøpet
+  v_user := public.upsert_vipps_user('selftest-pay-A', 'Betaler', '4712345678', 'payment', null);
+  select * into v_out from public.complete_purchase('selftest-anon-1', 4900, v_user);
+  if v_out.user_id <> v_user then raise exception 'FEIL: feil eier'; end if;
+  if v_out.remaining_clips <> 20 then raise exception 'FEIL: klipp=%', v_out.remaining_clips; end if;
+  if v_out.pending_finnkode <> '100000001' then raise exception 'FEIL: finnkode gikk tapt'; end if;
+  if (select user_id from public.purchases where reference='selftest-anon-1') <> v_user then
+    raise exception 'FEIL: eier ble ikke festet på raden';
+  end if;
+
+  -- Idempotens holder fortsatt
+  select * into v_out from public.complete_purchase('selftest-anon-1', 4900, v_user);
+  if v_out.remaining_clips <> 20 then raise exception 'FEIL: dobbeltkreditert'; end if;
+
+  -- Kjent sub gir samme bruker
+  if public.upsert_vipps_user('selftest-pay-A', null, null, 'payment', null) <> v_user then
+    raise exception 'FEIL: kjent sub ga ny bruker';
+  end if;
+
+  -- En login-sub som er ULIK betalings-sub kan lenkes til samme bruker,
+  -- og klippene følger personen — ikke identifikatoren.
+  if public.upsert_vipps_user('selftest-login-A', null, null, 'login', v_user) <> v_user then
+    raise exception 'FEIL: lenking av ny sub feilet';
+  end if;
+  if public.upsert_vipps_user('selftest-login-A', null, null, 'login', null) <> v_user then
+    raise exception 'FEIL: lenket sub ga ny bruker ved oppslag';
+  end if;
+  if public.clips_remaining(v_user) <> 20 then
+    raise exception 'FEIL: klipp forsvant ved lenking';
+  end if;
+  if (select count(*) from public.user_identities where user_id = v_user) <> 2 then
+    raise exception 'FEIL: forventet 2 identiteter';
+  end if;
+
+  -- En ulenket, ukjent sub blir en EGEN bruker uten klipp
+  v_user2 := public.upsert_vipps_user('selftest-sub-B', null, null, 'login', null);
+  if v_user2 = v_user then raise exception 'FEIL: ulike subs kollapset'; end if;
+  if public.clips_remaining(v_user2) <> 0 then raise exception 'FEIL: klipp lekket'; end if;
+
+  -- Et kjøp som fortsatt mangler eier skal ikke kunne krediteres
+  perform public.start_purchase(null, 'klippekort-20', 'selftest-anon-2', null);
+  begin
+    perform public.complete_purchase('selftest-anon-2', 4900, null);
+    raise exception 'FEIL: eierløst kjøp ble kreditert';
+  exception when others then
+    if sqlerrm like 'FEIL:%' then raise; end if;
+  end;
+
+  -- Innlogget kjøp (eier kjent fra start) virker fortsatt
+  perform public.start_purchase(v_user2, 'klippekort-20', 'selftest-kjent-1', null);
+  select * into v_out from public.complete_purchase('selftest-kjent-1', 4900, null);
+  if v_out.user_id <> v_user2 or v_out.remaining_clips <> 20 then
+    raise exception 'FEIL: innlogget kjøp: %/%', v_out.user_id, v_out.remaining_clips;
+  end if;
+
+  raise notice 'ANONYME KJØP OK';
+  delete from public.users where id in (v_user, v_user2);
+end $$;

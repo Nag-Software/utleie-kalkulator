@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
+import { claimPendingPayment } from "@/lib/auth/payment-cookie";
+import { readSession, writeSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
-import { abortPurchase, completePurchase } from "@/lib/db/klippekort";
+import {
+  abortPurchase,
+  completePurchase,
+  upsertVippsUser,
+} from "@/lib/db/klippekort";
 import { unlockFinn } from "@/lib/klippekort/unlock";
 import {
   captureVippsPayment,
   getVippsPayment,
+  getVippsUserinfo,
 } from "@/lib/vipps/epayment";
 
 /**
@@ -14,10 +21,14 @@ import {
  * ingenting. Derfor leses status alltid fra Vipps, og beløpet verifiseres
  * mot det vi lagret da kjøpet startet (`complete_purchase` avviser avvik).
  *
- * Handleren skriver aldri sesjonskapselen: referansen står i en URL, og en
- * URL som kunne gi innlogging ville vært en innloggingsomvei. Har brukeren
- * mistet kapselen underveis, krediteres klippene likevel på riktig bruker i
- * databasen, og han finner dem igjen ved å logge inn med Vipps.
+ * Her opprettes også kontoen: ba vi om profildeling, gir Vipps oss
+ * `profile.sub` når betalingen er godkjent, og da kan kunden ha kjøpt uten
+ * å logge inn først.
+ *
+ * Innlogging skjer kun når `uk_pay`-kapselen viser at dette er samme
+ * nettleser som startet betalingen — se `lib/auth/payment-cookie.ts`.
+ * Klippene krediteres uansett riktig eier, siden eierskapet kommer fra
+ * Vipps og ikke fra referansen i URL-en.
  */
 const REFERENCE_PATTERN = /^uk-[0-9a-f]{32}$/;
 
@@ -76,7 +87,50 @@ export async function GET(request: Request) {
       await captureVippsPayment(reference, amountOre);
     }
 
-    const purchase = await completePurchase({ reference, amountOre });
+    // Profildelingen forteller oss hvem som betalte. Startet kjøpet uten
+    // eier, opprettes kontoen her — det er dette som lar kunden kjøpe uten
+    // å logge inn først.
+    const sameBrowser = await claimPendingPayment(reference);
+    const session = await readSession();
+    let ownerId = session?.userId ?? null;
+    let ownerSub = session?.vippsSub ?? null;
+
+    if (payment.profileSub) {
+      const profile = await getVippsUserinfo(payment.profileSub);
+      ownerId = await upsertVippsUser({
+        vippsSub: payment.profileSub,
+        name: profile.name,
+        phoneNumber: profile.phoneNumber,
+        source: "payment",
+        // Er han allerede innlogget, skal betalings-sub-en peke på den
+        // brukeren i stedet for å lage en ny konto ved siden av.
+        linkUserId: session?.userId ?? null,
+      });
+      ownerSub = payment.profileSub;
+    }
+
+    if (!ownerId) {
+      console.error("vipps retur: fant ingen eier for", reference);
+      return redirect("/klippekort?kjop=feilet");
+    }
+
+    const purchase = await completePurchase({
+      reference,
+      amountOre,
+      userId: ownerId,
+    });
+
+    // Logg ham inn, så klippene er hans neste gang også — men bare hvis
+    // dette er nettleseren som startet betalingen. Ellers ville referansen
+    // i retur-URL-en fungert som et passord for hvem som helst som fikk
+    // tak i den. Klippene er uansett kreditert riktig eier.
+    if (ownerSub && sameBrowser && session?.userId !== purchase.userId) {
+      await writeSession({
+        userId: purchase.userId,
+        vippsSub: ownerSub,
+        name: session?.name ?? null,
+      });
+    }
 
     // Kjøpte han for å åpne en bestemt annonse, send ham rett dit.
     if (purchase.pendingFinnkode) {

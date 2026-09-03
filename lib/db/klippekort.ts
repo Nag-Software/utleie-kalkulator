@@ -32,16 +32,27 @@ export const EMPTY_STATUS: KlippekortStatus = {
   unlocked: [],
 };
 
-/** Finner eller oppretter brukeren bak en Vipps-identitet. */
+/**
+ * Finner eller oppretter brukeren bak en Vipps-identitet.
+ *
+ * En bruker kan ha flere `sub`-er: Vipps garanterer ikke skriftlig at
+ * `sub` fra Login er den samme som `sub` fra profildeling i ePayment.
+ * `linkUserId` knytter en ny sub til en bruker vi allerede kjenner, slik at
+ * klippene følger personen og ikke identifikatoren.
+ */
 export async function upsertVippsUser(options: {
   vippsSub: string;
   name?: string | null;
   phoneNumber?: string | null;
+  source: "login" | "payment";
+  linkUserId?: string | null;
 }): Promise<string> {
   return rpc<string>("upsert_vipps_user", {
     p_vipps_sub: options.vippsSub,
     p_name: options.name ?? null,
     p_phone: options.phoneNumber ?? null,
+    p_source: options.source,
+    p_link_user_id: options.linkUserId ?? null,
   });
 }
 
@@ -73,7 +84,8 @@ export async function loadStatus(
  * handleren å stole på spørrestrengen i retur-URL-en.
  */
 export async function startPurchase(options: {
-  userId: string;
+  /** null når kjøpet starter før innlogging — eieren festes ved betaling. */
+  userId: string | null;
   productId: string;
   reference: string;
   finnkode?: string | null;
@@ -102,6 +114,8 @@ export interface CompletedPurchase {
 export async function completePurchase(options: {
   reference: string;
   amountOre: number;
+  /** Eieren, når kjøpet startet anonymt. Ignoreres hvis eier alt er satt. */
+  userId?: string | null;
 }): Promise<CompletedPurchase> {
   const rows = await rpc<
     {
@@ -115,6 +129,7 @@ export async function completePurchase(options: {
   >("complete_purchase", {
     p_reference: options.reference,
     p_amount_ore: options.amountOre,
+    p_user_id: options.userId ?? null,
   });
 
   const row = rows?.[0];

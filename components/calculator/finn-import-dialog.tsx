@@ -307,22 +307,10 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
                     : `Du har ${remaining} klipp igjen.`}
                 </p>
               </>
-            ) : !me.loggedIn ? (
-              // Klippekortet eies av en Vipps-bruker, så innlogging kommer
-              // først. Den varer i over et år, så dette skjer én gang.
-              <>
-                <Button variant="cta" size="lg" className="w-full" asChild>
-                  <a href={loginHref}>
-                    <VippsMark data-slot="icon" />
-                    Fortsett med Vipps
-                  </a>
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Vi tar vare på annonsen mens du logger inn. Klippene følger
-                  Vipps-brukeren din, så de virker på alle enhetene dine.
-                </p>
-              </>
             ) : (
+              // Ingen innlogging før kjøp: Vipps deler profilen som del av
+              // betalingen, så kontoen opprettes av seg selv. Ett hopp til
+              // Vipps, og kunden lander rett på beregningen.
               <>
                 <label className="flex items-start gap-2.5 text-xs text-muted-foreground">
                   <input
@@ -369,6 +357,17 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
                     Selger: {COMPANY.legalName}, org.nr.{" "}
                     {COMPANY.organizationNumberFormatted}
                   </p>
+                  {!me.loggedIn ? (
+                    <p>
+                      Har du klipp fra før?{" "}
+                      <a
+                        href={loginHref}
+                        className="font-medium text-foreground underline"
+                      >
+                        Logg inn med Vipps
+                      </a>
+                    </p>
+                  ) : null}
                 </div>
               </>
             )}

@@ -67,6 +67,7 @@ export async function GET(request: Request) {
     const userId = await upsertVippsUser({
       vippsSub: identity.sub,
       name: identity.name,
+      source: "login",
     });
     await writeSession({
       userId,
