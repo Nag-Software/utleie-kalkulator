@@ -13,18 +13,33 @@ interface FieldShellProps {
   hint?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
+  estimated?: boolean;
 }
 
-function FieldShell({ id, label, hint, children, action }: FieldShellProps) {
+function FieldShell({
+  id,
+  label,
+  hint,
+  children,
+  action,
+  estimated,
+}: FieldShellProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <Label
-          htmlFor={id}
-          className="text-[13px] font-medium tracking-[-0.01em]"
-        >
-          {label}
-        </Label>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Label
+            htmlFor={id}
+            className="text-[13px] font-medium tracking-[-0.01em]"
+          >
+            {label}
+          </Label>
+          {estimated ? (
+            <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              estimat
+            </span>
+          ) : null}
+        </div>
         {action}
       </div>
       {children}
@@ -44,6 +59,7 @@ interface MoneyFieldProps {
   suffix?: string;
   hint?: string;
   action?: React.ReactNode;
+  estimated?: boolean;
 }
 
 /** Kronebeløp: input med nb-NO-formatering ved blur + valgfri slider. */
@@ -56,12 +72,19 @@ export function MoneyField({
   suffix = "kr",
   hint,
   action,
+  estimated,
 }: MoneyFieldProps) {
   const id = useId();
   const [draft, setDraft] = useState<string | null>(null);
 
   return (
-    <FieldShell id={id} label={label} hint={hint} action={action}>
+    <FieldShell
+      id={id}
+      label={label}
+      hint={hint}
+      action={action}
+      estimated={estimated}
+    >
       <div className="relative">
         <Input
           id={id}
@@ -107,6 +130,7 @@ interface NumberSliderFieldProps {
   suffix: string;
   decimals?: number;
   hint?: string;
+  estimated?: boolean;
 }
 
 /** Prosent- og årstall: input + slider side om side. */
@@ -120,6 +144,7 @@ export function NumberSliderField({
   suffix,
   decimals = 1,
   hint,
+  estimated,
 }: NumberSliderFieldProps) {
   const id = useId();
   const [draft, setDraft] = useState<string | null>(null);
@@ -133,7 +158,7 @@ export function NumberSliderField({
     });
 
   return (
-    <FieldShell id={id} label={label} hint={hint}>
+    <FieldShell id={id} label={label} hint={hint} estimated={estimated}>
       <div className="flex items-center gap-3">
         <div className="relative w-[104px] shrink-0">
           <Input

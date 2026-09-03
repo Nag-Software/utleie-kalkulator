@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import type { CalcResult } from "@/lib/calc/engine";
 import type { CalcInput } from "@/lib/calc/schema";
 import { formatNOK, formatPct } from "@/lib/format";
+import type { EstimatedCalcField } from "@/lib/research/enrich";
 import { cn } from "@/lib/utils";
 import {
   MoneyField,
@@ -24,6 +25,7 @@ export interface InputPanelProps {
   input: CalcInput;
   result: CalcResult;
   onChange: <K extends keyof CalcInput>(field: K, value: CalcInput[K]) => void;
+  estimatedFields?: ReadonlySet<EstimatedCalcField>;
 }
 
 const EQUITY_CHIPS = [10, 15, 25, 40].map((pct) => ({
@@ -36,8 +38,15 @@ const EQUITY_CHIPS = [10, 15, 25, 40].map((pct) => ({
  * flytter svaret, «Detaljert» åpner alt. Standardverdiene som brukes i
  * enkel modus står oppsummert nederst, så ingenting skjules i det stille.
  */
-export function InputPanel({ input, result, onChange }: InputPanelProps) {
+export function InputPanel({
+  input,
+  result,
+  onChange,
+  estimatedFields,
+}: InputPanelProps) {
   const [detailed, setDetailed] = useState(false);
+  const estimated = (field: EstimatedCalcField) =>
+    estimatedFields?.has(field) ?? false;
 
   const equityPct =
     result.totalProjectCost > 0
@@ -135,7 +144,12 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
           onChange={(v) => onChange("monthlyRent", v)}
           sliderMax={40_000}
           sliderStep={250}
-          hint="Sjekk lignende utleieboliger i området for et realistisk nivå."
+          estimated={estimated("monthlyRent")}
+          hint={
+            estimated("monthlyRent")
+              ? "Fylt inn som anslag fra beliggenhet og størrelse. Juster mot aktive utleieannonser."
+              : "Sjekk lignende utleieboliger i området for et realistisk nivå."
+          }
         />
         <MoneyField
           label="Felleskostnader per måned"
@@ -281,11 +295,13 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
                 label="Eiendomsskatt per år"
                 value={input.propertyTaxYearly}
                 onChange={(v) => onChange("propertyTaxYearly", v)}
+                estimated={estimated("propertyTaxYearly")}
               />
               <MoneyField
                 label="Forsikring per år"
                 value={input.insuranceYearly}
                 onChange={(v) => onChange("insuranceYearly", v)}
+                estimated={estimated("insuranceYearly")}
               />
               <NumberSliderField
                 label="Vedlikehold (% av leie)"
@@ -294,6 +310,7 @@ export function InputPanel({ input, result, onChange }: InputPanelProps) {
                 max={30}
                 step={0.5}
                 suffix="%"
+                estimated={estimated("maintenancePctOfRent")}
               />
               <NumberSliderField
                 label="Forvaltning/utleiemegler (% av leie)"

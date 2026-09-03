@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { extractFinnkode } from "./finnkode";
 import { mapFinnToInputs } from "./map-to-inputs";
 import { parseFinnListing } from "./parse";
+import { enrichListing } from "@/lib/research/enrich";
 
 function fixture(finnkode: string): string {
   return readFileSync(join(__dirname, "__fixtures__", `${finnkode}.html`), "utf8");
@@ -27,6 +28,15 @@ describe("parseFinnListing", () => {
     expect(parsed.internalArea).toBe(66);
     expect(parsed.buildYear).toBe(1957);
     expect(parsed.address).toContain("Oslo");
+    expect(parsed.city).toBe("Oslo");
+    expect(parsed.postalCode).toBe("0952");
+    expect(parsed.hoaAssets).toBe(135_367);
+    expect(parsed.externalArea).toBe(11);
+    expect(parsed.balconyArea).toBe(7);
+    expect(parsed.taxValue).toBe(1_083_794);
+    expect(parsed.imageUrls.length).toBeGreaterThanOrEqual(8);
+    expect(parsed.imageUrls[0]).toContain("finncdn");
+    expect(new Set(parsed.imageUrls).size).toBe(parsed.imageUrls.length);
     expect(warnings).not.toContain("Fant ikke prisantydning i annonsen.");
   });
 
@@ -42,6 +52,8 @@ describe("parseFinnListing", () => {
     expect(parsed.hoaFeesMonthly).toBe(2_673);
     expect(parsed.imageUrl).toContain("finncdn");
     expect(parsed.title).toBeTruthy();
+    expect(parsed.plotOwnership).toBe("eiet");
+    expect(parsed.city).toBe("Oslo");
   });
 
   it("finner pris også når prisantydning ikke står i dt/dd (totalpris-fallback)", () => {
@@ -52,6 +64,8 @@ describe("parseFinnListing", () => {
     expect(parseFailed).toBe(false);
     // totalpris 5 809 024 − omkostninger 159 024 = 5 650 000
     expect(parsed.askingPrice).toBe(5_650_000);
+    expect(parsed.energyLabel).toMatch(/G/i);
+    expect(parsed.plotOwnership).toBe("eiet");
   });
 
   it("utleder prisantydning fra totalpris når den mangler helt", () => {
@@ -97,6 +111,16 @@ describe("mapFinnToInputs", () => {
     expect(input.ownershipType).toBe("selveier");
     expect(input.transactionCosts).toBe(74_750);
     expect(input.sharedDebt).toBe(89_456);
+  });
+
+  it("fyller leie, forsikring og vedlikehold fra research", () => {
+    const { parsed } = parseFinnListing(fixture("468777164"), "468777164");
+    const research = enrichListing(parsed);
+    const input = mapFinnToInputs(parsed, research);
+    expect(input.monthlyRent).toBe(research.marketRent.monthly);
+    expect(input.insuranceYearly).toBe(research.insurance.yearly);
+    expect(input.maintenancePctOfRent).toBe(8);
+    expect(input.propertyTaxYearly).toBe(0);
   });
 });
 

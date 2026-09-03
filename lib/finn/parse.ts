@@ -1,6 +1,9 @@
 import * as cheerio from "cheerio";
+import { parseListingAddress } from "./address";
+import { extractListingImages } from "./images";
 import { parseFinnNumber } from "./numbers";
-import type { FinnParsedData } from "./types";
+import { extractStatedMonthlyRent, listingMentionsRented } from "./rent-from-text";
+import type { FinnParsedData, PlotOwnership } from "./types";
 
 export interface FinnParseOutcome {
   parsed: FinnParsedData;
@@ -17,6 +20,19 @@ function normalizeLabel(label: string): string {
     .replace(/[.:]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function parsePlotOwnership(raw: string | null): PlotOwnership | null {
+  if (!raw) return null;
+  const lowered = raw.toLowerCase();
+  if (/\bfestet\b/.test(lowered)) return "festet";
+  if (/\beiet\b/.test(lowered)) return "eiet";
+  return null;
+}
+
+function firstEnergyLetter(raw: string | null): string | null {
+  if (!raw || raw.length > 40) return null;
+  return raw;
 }
 
 /**
@@ -86,26 +102,62 @@ export function parseFinnListing(
     $('meta[property="og:street-address"]').attr("content")?.trim() ||
     null;
   if (!address) warnings.push("Fant ikke adresse.");
+  const { postalCode, city } = parseListingAddress(address);
 
   const title =
     $("h1").first().text().trim() ||
     $('meta[property="og:title"]').attr("content")?.trim() ||
     null;
 
-  const imageUrl = $('meta[property="og:image"]').attr("content")?.trim() || null;
+  const ogImage = $('meta[property="og:image"]').attr("content")?.trim() || null;
+  const imageUrls = extractListingImages($, ogImage);
+  const imageUrl = imageUrls[0] ?? ogImage;
 
   const energyRaw = label("energimerking");
+  const plotRaw = label("tomteareal");
+
+  const listingBlob = [
+    title,
+    $('meta[name="description"]').attr("content"),
+    $('meta[property="og:description"]').attr("content"),
+    label("leieinntekt"),
+    label("årlig leieinntekt"),
+    label("månedsleie"),
+    label("husleie"),
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const statedFromLabels =
+    numberFrom("månedsleie", "husleie") ??
+    (() => {
+      const yearly = numberFrom("leieinntekt", "årlig leieinntekt");
+      return yearly && yearly >= 24_000 ? Math.round(yearly / 12) : null;
+    })();
+  const statedMonthlyRent =
+    statedFromLabels && statedFromLabels >= 2_000 && statedFromLabels <= 80_000
+      ? statedFromLabels
+      : extractStatedMonthlyRent(listingBlob);
+  const currentlyRented = statedMonthlyRent
+    ? true
+    : listingMentionsRented(listingBlob)
+      ? true
+      : null;
 
   const parsed: FinnParsedData = {
     finnkode,
     url: `https://www.finn.no/realestate/homes/ad.html?finnkode=${finnkode}`,
     title,
     address,
+    postalCode,
+    city,
     imageUrl,
+    imageUrls,
     askingPrice,
     totalPrice,
     sharedDebt,
     hoaFeesMonthly: numberFrom("felleskost/mnd", "felleskostnader/mnd", "felleskostnader"),
+    hoaAssets: numberFrom("fellesformue"),
     transactionCosts,
     taxValue: numberFrom("formuesverdi"),
     propertyType: label("boligtype"),
@@ -114,12 +166,17 @@ export function parseFinnListing(
     rooms: numberFrom("rom"),
     internalArea: numberFrom("internt bruksareal", "bra-i", "primærrom"),
     usableArea: numberFrom("bruksareal"),
+    externalArea: numberFrom("eksternt bruksareal", "bra-e"),
+    balconyArea: numberFrom("balkong/terrasse", "balkong", "terrasse"),
     floor: numberFrom("etasje"),
     buildYear: numberFrom("byggeår"),
     municipalFeesYearly: numberFrom("kommunale avg", "kommunale avgifter", "kommunale utgifter"),
     propertyTaxYearly: numberFrom("eiendomsskatt"),
-    energyLabel: energyRaw && energyRaw.length <= 40 ? energyRaw : null,
+    energyLabel: firstEnergyLetter(energyRaw),
     plotArea: numberFrom("tomteareal"),
+    plotOwnership: parsePlotOwnership(plotRaw),
+    currentlyRented,
+    statedMonthlyRent,
   };
 
   for (const [field, labelText] of [

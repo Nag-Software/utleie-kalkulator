@@ -58,7 +58,6 @@ export const viewport: Viewport = {
 const NAV_LINKS: { href: string; label: string; hideOnMobile?: boolean }[] = [
   { href: "/", label: "Kalkulator" },
   { href: "/guide", label: "Guider" },
-  { href: "/klippekort", label: "Klippekort", hideOnMobile: true },
   { href: "/om", label: "Om", hideOnMobile: true },
 ];
 
@@ -112,10 +111,10 @@ export default function RootLayout({
                 </Link>
               ))}
               <Link
-                href="/#kalkulator"
+                href="/klippekort"
                 className="ml-1 hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-85 sm:inline-flex"
               >
-                Regn ut gratis
+                Ditt klippekort
               </Link>
             </nav>
           </div>

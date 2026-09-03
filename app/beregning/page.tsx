@@ -5,6 +5,8 @@ import {
   hasAnyCalcParam,
 } from "@/components/calculator/url-state";
 import { Button } from "@/components/ui/button";
+import type { EstimatedCalcField } from "@/lib/research/enrich";
+import { decodeDossier, DOSSIER_PARAM } from "@/lib/research/dossier";
 
 import { BeregningClient } from "./beregning-client";
 
@@ -30,19 +32,42 @@ function toSearchParams(
   return search;
 }
 
+const ESTIMATED_FIELDS = new Set<EstimatedCalcField>([
+  "monthlyRent",
+  "propertyTaxYearly",
+  "insuranceYearly",
+  "maintenancePctOfRent",
+]);
+
+function parseEstimatedFields(raw: string | null): EstimatedCalcField[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .filter((field): field is EstimatedCalcField =>
+      ESTIMATED_FIELDS.has(field as EstimatedCalcField),
+    );
+}
+
 export default async function BeregningPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const search = toSearchParams(await searchParams);
+  const dossier = decodeDossier(search.get(DOSSIER_PARAM));
+  const fromQuery = parseEstimatedFields(search.get("est"));
+  const estimatedFields =
+    fromQuery.length > 0
+      ? fromQuery
+      : (dossier?.research.estimatedFields ?? []);
 
   if (hasAnyCalcParam(search) || search.get("kilde") === "finn") {
     return (
       <BeregningClient
-        finn={null}
-        warnings={[]}
+        finn={dossier?.finn ?? null}
+        warnings={dossier?.warnings ?? []}
         initialInputs={decodeInputFromParams(search)}
+        estimatedFields={estimatedFields}
         importedFromFinn={search.get("kilde") === "finn"}
       />
     );

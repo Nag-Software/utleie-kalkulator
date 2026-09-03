@@ -3,6 +3,8 @@ import { encodeInputToParams } from "@/components/calculator/url-state";
 import { consumeClip, loadStatus } from "@/lib/db/klippekort";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
 import { mapFinnToInputs } from "@/lib/finn/map-to-inputs";
+import { enrichListing } from "@/lib/research/enrich";
+import { DOSSIER_PARAM, encodeDossier } from "@/lib/research/dossier";
 
 export type UnlockResult =
   | { ok: true; calculationUrl: string; alreadyUnlocked: boolean; remaining: number }
@@ -61,8 +63,20 @@ export async function unlockFinn(
     return { ok: false, reason: consumed.outcome };
   }
 
-  const params = encodeInputToParams(mapFinnToInputs(outcome.parsed));
+  const research = enrichListing(outcome.parsed);
+  const params = encodeInputToParams(mapFinnToInputs(outcome.parsed, research));
   params.set("kilde", "finn");
+  params.set(
+    DOSSIER_PARAM,
+    encodeDossier({
+      finn: outcome.parsed,
+      research,
+      warnings: outcome.warnings,
+    }),
+  );
+  if (research.estimatedFields.length > 0) {
+    params.set("est", research.estimatedFields.join(","));
+  }
   return {
     ok: true,
     calculationUrl: `/beregning?${params.toString()}`,

@@ -26,7 +26,7 @@ export default function OmPage() {
         <p>
           Kalkulatoren beregner lønnsomheten til en utleiebolig ut fra tallene
           du legger inn: kjøpesum, finansiering, leieinntekter og kostnader.
-          Du får kontantstrøm per måned etter skatt, brutto og netto{" "}
+          Du får etter skatt, brutto og netto{" "}
           <Link href="/guide/yield-utleiebolig">yield</Link>,
           cash-on-cash-avkastning, break-even-leie, break-even-rente,
           nedbetalingsplan og en flerårig prognose. Alt oppdateres umiddelbart
