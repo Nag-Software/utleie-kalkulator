@@ -6,7 +6,7 @@ import { COMPANY, CONTACT_EMAIL, PRICE_NOK } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Salgsvilkår",
   description:
-    "Salgsvilkår for utleie-kalkulator.no: parter, priser, betaling, levering, angrerett, retur, reklamasjon og konfliktløsning. Levert av Nag Software, org.nr. 936 593 127.",
+    "Salgsvilkår for utleie-kalkulator.no: priser, betaling, bindingstid, oppsigelse, prisendringer, angrerett og reklamasjon. Levert av Nag Software, org.nr. 936 593 127.",
   alternates: { canonical: "/vilkar" },
 };
 
@@ -33,7 +33,7 @@ export default function VilkarPage() {
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
           Disse vilkårene gjelder for kjøp og bruk av tjenestene på
-          utleie-kalkulator.no. Sist oppdatert 26. august 2026.
+          utleie-kalkulator.no. Sist oppdatert 3. september 2026.
         </p>
 
         <h2 id="parter">1. Parter</h2>
@@ -102,8 +102,7 @@ export default function VilkarPage() {
           betaler – det kommer ingen gebyrer i tillegg. {COMPANY.legalName} er
           ikke registrert i Merverdiavgiftsregisteret, og det beregnes derfor
           ikke merverdiavgift på kjøpet. Kjøpet er en engangsbetaling: det
-          opprettes ingen konto, og det løper ingen abonnement, medlemskap
-          eller bindingstid som må sies opp.
+          starter ingen automatisk eller fast betaling.
         </p>
 
         <h2 id="betaling">3. Betaling</h2>
@@ -119,7 +118,32 @@ export default function VilkarPage() {
           deg tilgang til beregningen din.
         </p>
 
-        <h2 id="levering">4. Levering</h2>
+        <h2 id="abonnement">4. Bindingstid, oppsigelse og endringer</h2>
+        <p>
+          Tjenesten tilbyr per i dag <strong>ikke abonnement eller faste
+          betalinger</strong>. Hvert kjøp er en separat engangsbetaling for den
+          tjenesten og prisen som vises før bestillingen bekreftes. Eventuell
+          innlogging med en betalingsleverandør oppretter ikke et abonnement.
+        </p>
+        <ul>
+          <li>
+            <strong>Bindingstid:</strong> Kjøpet har ingen bindingstid og
+            fornyes ikke automatisk.
+          </li>
+          <li>
+            <strong>Oppsigelse:</strong> Det finnes ingen løpende betalingsavtale
+            å si opp. Du belastes ikke på nytt uten at du selv legger inn og
+            bekrefter en ny bestilling.
+          </li>
+          <li>
+            <strong>Endring av tjeneste eller pris:</strong> Vi kan endre
+            innhold og pris for fremtidige kjøp. En endring gjelder aldri et
+            allerede gjennomført kjøp. Gjeldende tjeneste, totalpris og vilkår
+            vises alltid før du bekrefter en ny betaling.
+          </li>
+        </ul>
+
+        <h2 id="levering">5. Levering</h2>
         <p>
           Tjenesten er digital og leveres <strong>umiddelbart</strong> på
           nettstedet – normalt innen få sekunder etter gjennomført betaling. Du
@@ -134,7 +158,7 @@ export default function VilkarPage() {
           refunderer beløpet.
         </p>
 
-        <h2 id="angrerett">5. Angrerett</h2>
+        <h2 id="angrerett">6. Angrerett</h2>
         <p>
           Ved kjøp av digitalt innhold som leveres umiddelbart, må du før
           kjøpet gi uttrykkelig samtykke til at leveringen starter med én gang,
@@ -157,7 +181,7 @@ export default function VilkarPage() {
           eller send oss en melding på e-post.
         </p>
 
-        <h2 id="retur">6. Retur</h2>
+        <h2 id="retur">7. Retur</h2>
         <p>
           Tjenesten er et rent digitalt produkt uten fysisk vare, og det finnes
           derfor ingenting å returnere eller sende tilbake. Der du har krav på å
@@ -173,7 +197,7 @@ export default function VilkarPage() {
           trenger å be om det.
         </p>
 
-        <h2 id="reklamasjon">7. Reklamasjon</h2>
+        <h2 id="reklamasjon">8. Reklamasjon</h2>
         <p>
           Har tjenesten en mangel – den virker ikke som beskrevet, eller
           leveringen uteblir – kan du reklamere ved å sende e-post til{" "}
@@ -204,7 +228,7 @@ export default function VilkarPage() {
           du derimot en regnefeil, vil vi svært gjerne høre om det.
         </p>
 
-        <h2 id="konfliktlosning">8. Konfliktløsning</h2>
+        <h2 id="konfliktlosning">9. Konfliktløsning</h2>
         <p>
           Ta alltid kontakt med oss først – de aller fleste saker løses med en
           e-post. Blir vi ikke enige, kan du som forbruker bringe saken inn for{" "}
@@ -238,7 +262,7 @@ export default function VilkarPage() {
           .
         </p>
 
-        <h2 id="ansvar">9. Ikke rådgivning – og ansvarsbegrensning</h2>
+        <h2 id="ansvar">10. Ikke rådgivning – og ansvarsbegrensning</h2>
         <p>
           Alle resultater er automatiske estimater basert på forutsetningene du
           selv legger inn, og utgjør ikke finansiell, juridisk eller
@@ -254,7 +278,7 @@ export default function VilkarPage() {
           beregningen.
         </p>
 
-        <h2 id="datakilder">10. Datakilder og immaterielle rettigheter</h2>
+        <h2 id="datakilder">11. Datakilder og immaterielle rettigheter</h2>
         <p>
           Ved FINN-import henter tjenesten offentlig tilgjengelige nøkkeltall
           fra annonsen du selv oppgir, på dine vegne og til din egen beregning.
@@ -268,7 +292,7 @@ export default function VilkarPage() {
           fritt deles.
         </p>
 
-        <h2 id="lovvalg">11. Lovvalg</h2>
+        <h2 id="lovvalg">12. Lovvalg</h2>
         <p>
           Vilkårene er underlagt norsk rett. Se også{" "}
           <Link href="/personvern">personvernerklæringen</Link> og{" "}
