@@ -11,6 +11,8 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const _values = React.useMemo(
@@ -45,10 +47,20 @@ function Slider({
           className="absolute bg-cta select-none data-horizontal:h-full data-vertical:w-full"
         />
       </SliderPrimitive.Track>
+      {/* Radix setter role="slider" på thumben, ikke på Root. Navnet må
+          derfor følge hit – ellers står selve kontrollen uten tilgjengelig
+          navn selv om Root har aria-label. Ved flere thumbs nummereres de,
+          så «fra» og «til» kan skilles fra hverandre. */}
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
+          aria-label={
+            ariaLabel && _values.length > 1
+              ? `${ariaLabel} (${index + 1} av ${_values.length})`
+              : ariaLabel
+          }
+          aria-labelledby={ariaLabelledBy}
           className="relative block size-4 shrink-0 rounded-full border-2 border-cta bg-card ring-ring transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
         />
       ))}

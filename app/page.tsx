@@ -45,8 +45,10 @@ function Hero() {
       <HeroGlow />
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-14 text-center sm:px-6 sm:pb-14 sm:pt-20">
         <Pill>Gratis · uten konto · norske regler for 2026</Pill>
+        {/* H1 bærer hovedsøkeordet, men beholder spørsmålet som faktisk
+            selger. Rekkefølgen er bevisst: navnet på verktøyet først. */}
         <h1 className="display mx-auto mt-6 max-w-4xl text-[clamp(2.5rem,7.5vw,4.5rem)]">
-          Lønner utleieboligen seg?
+          Utleiekalkulator: lønner utleieboligen seg?
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
           Legg inn seks tall og få kontantstrøm, yield og break-even med en

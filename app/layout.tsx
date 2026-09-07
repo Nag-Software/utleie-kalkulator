@@ -26,17 +26,6 @@ export const metadata: Metadata = {
   description:
     "Beregn kontantstrøm, yield og avkastning på utleiebolig på sekunder. Gratis utleiekalkulator uten konto – eller hent tallene rett fra FINN-annonsen.",
   applicationName: SITE_NAME,
-  keywords: [
-    "utleiekalkulator",
-    "utleie kalkulator",
-    "utleiebolig kalkulator",
-    "avkastning utleiebolig",
-    "yield utleiebolig",
-    "kontantstrøm utleie",
-    "leie ut bolig",
-    "sekundærbolig",
-    "lønner det seg å leie ut",
-  ],
   category: "finance",
   ...(googleSiteVerification
     ? { verification: { google: googleSiteVerification } }

@@ -6,6 +6,33 @@ import { articleJsonLd, breadcrumbJsonLd, jsonLdString } from "@/lib/jsonld";
 
 export type ArticleMeta = GuideMeta;
 
+/**
+ * Ankertekst til forsiden, variert over guidene. Alle 59 guidene lenket
+ * tidligere med nøyaktig samme ordlyd, noe som ga et ensidig internt
+ * signal mot én skrivemåte. Blandingen dekker de formene folk faktisk
+ * søker på, og beholder én nøytral variant så profilen ikke blir
+ * overoptimalisert.
+ */
+const CTA_ANCHORS = [
+  "Prøv utleiekalkulatoren",
+  "Åpne kalkulatoren for utleiebolig",
+  "Gratis kalkulator for utleie av bolig",
+  "Sjekk tallene for din utleiebolig",
+];
+
+/**
+ * Valget må være stabilt per guide: varierer ankerteksten mellom deploys,
+ * ser det ut som lenkene endrer seg uten grunn. Derfor utledes den av
+ * slugen, ikke av rekkefølge eller tilfeldighet.
+ */
+function ctaAnchorFor(slug: string): string {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i += 1) {
+    hash = (hash * 31 + slug.charCodeAt(i)) % 100_000;
+  }
+  return CTA_ANCHORS[hash % CTA_ANCHORS.length];
+}
+
 function RelatedGuides({ currentSlug }: { currentSlug: string }) {
   const current = GUIDES.find((guide) => guide.slug === currentSlug);
   // Samme kategori først, deretter resten i registerrekkefølge.
@@ -113,7 +140,7 @@ export function ArticleLayout({
             konto. Eller hent tallene rett fra en FINN-annonse.
           </p>
           <Button asChild variant="cta" size="lg" className="relative mt-7">
-            <Link href="/#kalkulator">Prøv utleiekalkulatoren</Link>
+            <Link href="/#kalkulator">{ctaAnchorFor(meta.slug)}</Link>
           </Button>
         </aside>
 
