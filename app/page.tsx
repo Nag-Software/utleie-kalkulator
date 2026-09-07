@@ -303,8 +303,9 @@ function AboutCalculator() {
             >
               dokumentavgift på 2,5 % for selveier
             </Link>{" "}
-            og normal ledighet – men alt kan justeres under «Detaljert». Leier
-            du ut skattefritt i egen bolig, setter du skattesatsen til null.
+            og normal ledighet – men hver eneste forutsetning ligger åpen og
+            kan justeres. Leier du ut skattefritt i egen bolig, setter du
+            skattesatsen til null.
             Velger du andelsbolig, fjernes dokumentavgiften og fellesgjelden
             regnes inn i totalprisen.
           </p>
