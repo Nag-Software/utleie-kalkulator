@@ -147,8 +147,11 @@ export function Calculator({
     <div className="relative">
       {examplePresets || shareActions ? (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          {/* Eksemplene bryter over tre linjer på mobil og skyver
+              kalkulatoren under folden – de er en «se hva dette er»-snarvei
+              for desktop, ikke noe man trenger på liten skjerm. */}
           {examplePresets ? (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden flex-wrap items-center gap-2 sm:flex">
               <span className="text-[13px] text-muted-foreground">
                 Prøv et eksempel:
               </span>

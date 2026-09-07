@@ -46,8 +46,10 @@ function Hero() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-14 text-center sm:px-6 sm:pb-14 sm:pt-20">
         <Pill>Gratis · uten konto · norske regler for 2026</Pill>
         {/* H1 bærer hovedsøkeordet, men beholder spørsmålet som faktisk
-            selger. Rekkefølgen er bevisst: navnet på verktøyet først. */}
-        <h1 className="display mx-auto mt-6 max-w-4xl text-[clamp(2.5rem,7.5vw,4.5rem)]">
+            selger. Rekkefølgen er bevisst: navnet på verktøyet først.
+            Nedre grense er 2rem, ikke 2.5rem: over det bryter «lønner»
+            ut som en foreldreløs linje for seg selv på 375 px. */}
+        <h1 className="display mx-auto mt-6 max-w-4xl text-[clamp(2rem,7.5vw,4.5rem)]">
           Utleiekalkulator: lønner utleieboligen seg?
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
