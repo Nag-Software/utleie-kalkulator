@@ -7,7 +7,9 @@ import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
 import { EMPTY_STATUS, loadStatus } from "@/lib/db/klippekort";
 import { KLIPP_GYLDIGHET_MANEDER, KLIPP_PER_KJOP } from "@/lib/site";
+import { REFERENCE_PATTERN } from "@/lib/vipps/settle";
 import { KlippekortActions } from "./klippekort-actions";
+import { PaymentPoller } from "./payment-poller";
 
 export const metadata: Metadata = {
   title: "Klippekortet ditt",
@@ -30,7 +32,11 @@ const NOTICES: Record<string, { tone: "ok" | "warn" | "error"; text: string }> =
   },
   "kjop=venter": {
     tone: "warn",
-    text: "Vipps har ikke bekreftet betalingen ennå. Last siden på nytt om noen sekunder.",
+    text: "Venter på bekreftelse fra Vipps …",
+  },
+  "kjop=sen": {
+    tone: "warn",
+    text: "Vipps har ikke bekreftet betalingen ennå. Godkjente du den, legges klippene til automatisk i løpet av noen minutter — logg inn med Vipps for å se dem.",
   },
   "kjop=avbrutt": {
     tone: "warn",
@@ -86,6 +92,16 @@ export default async function KlippekortPage({
     }
   }
 
+  // Tilbake fra Vipps før godkjenningen var registrert: prøv igjen selv.
+  const pollReference =
+    params.kjop === "venter" &&
+    typeof params.ref === "string" &&
+    REFERENCE_PATTERN.test(params.ref)
+      ? params.ref
+      : null;
+  const pollAttempt =
+    typeof params.forsok === "string" ? Number.parseInt(params.forsok, 10) || 0 : 0;
+
   const notices = Object.entries(NOTICES).filter(([key]) => {
     const [name, value] = key.split("=");
     return params[name] === value;
@@ -93,6 +109,9 @@ export default async function KlippekortPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
+      {pollReference ? (
+        <PaymentPoller reference={pollReference} attempt={pollAttempt} />
+      ) : null}
       {notices.map(([key, notice]) => (
         <div
           key={key}

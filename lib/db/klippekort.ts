@@ -172,3 +172,17 @@ export async function consumeClip(
   if (!row) throw new Error("consume_clip ga ingen rad");
   return { outcome: row.outcome, remaining: Number(row.remaining_clips) };
 }
+
+/**
+ * Referansene til kjøp som fortsatt venter på oppgjør, eldste først. Brukes
+ * av avstemmingen til å fange betalinger som verken retur-URL-en eller
+ * webhooken fikk fullført.
+ */
+export async function listPendingPurchases(
+  minAgeSeconds: number,
+): Promise<string[]> {
+  const rows = await rpc<string[] | null>("pending_purchase_references", {
+    p_min_age_seconds: minAgeSeconds,
+  });
+  return rows ?? [];
+}

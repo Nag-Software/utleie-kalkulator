@@ -10,6 +10,7 @@
 --   20260903155620  klippekort_status_function
 --   20260903155843  purchase_pending_finnkode
 --   20260903155908  drop_legacy_start_purchase_overload
+--   20261016000000  pending_purchase_references
 --
 -- All tilgang skjer server-side med den hemmelige nøkkelen. RLS er på uten
 -- policyer, så den publiserbare nøkkelen kommer ikke til noe av dette.
@@ -290,6 +291,25 @@ begin
            public.clips_remaining(v_owner), v_purchase.expires_at,
            v_purchase.pending_finnkode;
 end;
+$$;
+
+-- Kjøp som fortsatt venter på oppgjør, eldste først. Avstemmingen sjekker
+-- disse mot Vipps, så en godkjent betaling blir trukket og kreditert selv
+-- om kunden aldri kom tilbake og webhooken uteble. Eldre enn 30 dager er
+-- uansett utløpt hos Vipps og lar vi ligge.
+create or replace function public.pending_purchase_references(p_min_age_seconds integer)
+returns setof text
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select p.reference
+  from public.purchases p
+  where p.status = 'pending'
+    and p.created_at < now() - make_interval(secs => p_min_age_seconds)
+    and p.created_at > now() - interval '30 days'
+  order by p.created_at
+  limit 50;
 $$;
 
 -- Markerer et kjøp som ikke gjennomført. Rører aldri et betalt kjøp.

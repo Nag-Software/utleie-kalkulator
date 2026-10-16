@@ -40,9 +40,9 @@ interface VippsAmount {
   value?: number;
 }
 
-async function vippsFetch(
+export async function vippsFetch(
   path: string,
-  init: { method: "GET" | "POST"; body?: unknown; idempotencyKey?: string },
+  init: { method: "GET" | "POST" | "DELETE"; body?: unknown; idempotencyKey?: string },
 ): Promise<unknown> {
   const { vipps } = getConfig();
   if (!vipps.subscriptionKey || !vipps.merchantSerialNumber) {
