@@ -11,6 +11,7 @@
 --   20260903155843  purchase_pending_finnkode
 --   20260903155908  drop_legacy_start_purchase_overload
 --   20261016000000  pending_purchase_references
+--   20261020000000  funnel_events
 --
 -- All tilgang skjer server-side med den hemmelige nøkkelen. RLS er på uten
 -- policyer, så den publiserbare nøkkelen kommer ikke til noe av dette.
@@ -100,11 +101,29 @@ create table if not exists public.unlocks (
   primary key (user_id, finnkode)
 );
 
+-- Trakten før kjøpet: hvor mange som ser en FINN-forhåndsvisning og hvor
+-- mange som går videre til innlogging. Påbegynte kjøp står allerede i
+-- `purchases` (hver checkout lager en rad), så de logges ikke her.
+-- Ingen personopplysninger: bare hendelse, annonse og om brukeren var
+-- innlogget.
+create table if not exists public.funnel_events (
+  id         bigint      generated always as identity primary key,
+  event      text        not null
+               check (event in ('finn_preview', 'finn_preview_failed', 'login_start')),
+  finnkode   text        check (finnkode is null or finnkode ~ '^[0-9]{8,10}$'),
+  logged_in  boolean,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists funnel_events_created
+  on public.funnel_events (created_at);
+
 alter table public.products  enable row level security;
 alter table public.users     enable row level security;
 alter table public.purchases enable row level security;
 alter table public.unlocks   enable row level security;
 alter table public.user_identities enable row level security;
+alter table public.funnel_events enable row level security;
 
 -- Må stemme med KLIPP_*-konstantene i lib/site.ts.
 insert into public.products (id, name, clips, price_ore, validity_months)
@@ -310,6 +329,21 @@ as $$
     and p.created_at > now() - interval '30 days'
   order by p.created_at
   limit 50;
+$$;
+
+-- Logger én hendelse i trakten. Kalles uten å vente på svaret, så en feil
+-- her aldri stopper forhåndsvisningen eller innloggingen.
+create or replace function public.log_funnel_event(
+  p_event     text,
+  p_finnkode  text,
+  p_logged_in boolean
+)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  insert into public.funnel_events (event, finnkode, logged_in)
+  values (p_event, p_finnkode, p_logged_in);
 $$;
 
 -- Markerer et kjøp som ikke gjennomført. Rører aldri et betalt kjøp.

@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { jsonError, readJsonBody, tooManyRequests } from "@/lib/api-helpers";
+import { readSession } from "@/lib/auth/session";
+import { logFunnelEvent } from "@/lib/db/funnel";
 import { fetchFinnListing, FinnError } from "@/lib/finn/fetch";
 import { extractFinnkode } from "@/lib/finn/finnkode";
 import type { FinnParseOutcome } from "@/lib/finn/parse";
@@ -46,10 +48,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Måles bare når en gyldig FINN-kode er limt inn: først da
+  // har brukeren vist interesse for en konkret annonse.
+  const loggedIn = (await readSession()) !== null;
+
   try {
     const outcome = await fetchFinnListing(finnkode);
+    after(() => logFunnelEvent("finn_preview", { finnkode, loggedIn }));
     return NextResponse.json(toPreview(outcome));
   } catch (error) {
+    after(() => logFunnelEvent("finn_preview_failed", { finnkode, loggedIn }));
     if (error instanceof FinnError) {
       switch (error.code) {
         case "NOT_FOUND":
