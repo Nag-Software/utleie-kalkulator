@@ -14,6 +14,7 @@ import {
   websiteJsonLd,
 } from "@/lib/jsonld";
 import {
+  FINN_IMPORT_PAUSET,
   KLIPP_GYLDIGHET_MANEDER,
   KLIPP_PER_KJOP,
   KLIPP_PRIS_NOK,
@@ -157,6 +158,12 @@ function FinnSection() {
             </ul>
           </div>
           <div className="flex flex-col items-start gap-4 lg:w-64">
+            {FINN_IMPORT_PAUSET ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/70">
+                <span className="size-1.5 rounded-full bg-[#ffc300]" />
+                Midlertidig ute av drift
+              </span>
+            ) : null}
             <div>
               {/* Antallet hører til prisen: «49 kr» alene leses lett som
                   prisen for én annonse. */}

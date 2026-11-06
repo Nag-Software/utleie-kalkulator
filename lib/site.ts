@@ -16,6 +16,16 @@ export const KLIPP_PRIS_ORE = 4900;
 export const KLIPP_GYLDIGHET_MANEDER = 12;
 
 /**
+ * FINN avviser henting fra serverne våre (HTTP 403 fra 4. november 2026).
+ * Så lenge dette står på, selges ingen klippekort, og FINN-dialogen sier
+ * hvorfor i stedet for å la kunden prøve igjen og igjen. Sett til false når
+ * hentingen virker igjen.
+ */
+export const FINN_IMPORT_PAUSET = true;
+export const FINN_PAUSE_MELDING =
+  "FINN-importen er midlertidig ute av drift fordi FINN har stengt for henting fra serverne våre. Vi selger ikke klippekort mens dette pågår, og klipp du har igjen, beholder du. Den manuelle kalkulatoren er gratis og virker som vanlig.";
+
+/**
  * Selskapsidentifikasjon. Kravene til betalingsleverandører (bl.a. Vipps
  * MobilePay) er at navn, organisasjonsnummer, adresse, telefon og e-post skal
  * være godt synlig på nettstedet. Alt samles her så footer, kontaktside,

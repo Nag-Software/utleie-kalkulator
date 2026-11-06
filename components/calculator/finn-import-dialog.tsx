@@ -25,6 +25,8 @@ import type { FinnPreview } from "@/lib/finn/types";
 import { formatNOK } from "@/lib/format";
 import {
   COMPANY,
+  FINN_IMPORT_PAUSET,
+  FINN_PAUSE_MELDING,
   KLIPP_GYLDIGHET_MANEDER,
   KLIPP_PER_KJOP,
   KLIPP_PRIS_NOK,
@@ -195,7 +197,11 @@ export function FinnImportDialog({ trigger }: { trigger?: React.ReactNode }) {
           </p>
         ) : null}
 
-        {phase === "input" || phase === "previewing" ? (
+        {FINN_IMPORT_PAUSET ? (
+          <p className="rounded-xl border border-border bg-secondary p-3.5 text-sm">
+            {FINN_PAUSE_MELDING}
+          </p>
+        ) : phase === "input" || phase === "previewing" ? (
           <form
             ref={formRef}
             className="space-y-3"

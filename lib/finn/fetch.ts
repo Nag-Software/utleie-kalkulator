@@ -67,11 +67,13 @@ export async function fetchFinnListing(
   if (response.status === 404 || response.status === 410) {
     throw new FinnError("NOT_FOUND");
   }
-  if (response.status === 403 || response.status === 429) {
-    throw new FinnError("BLOCKED", `HTTP ${response.status}`);
-  }
   if (!response.ok) {
-    throw new FinnError("BLOCKED", `HTTP ${response.status}`);
+    // Statusen og hvem som svarte (FINN selv eller en CDN foran) er det som
+    // skiller en sperre fra en feil hos FINN når dette skjer i produksjon.
+    throw new FinnError(
+      "BLOCKED",
+      `HTTP ${response.status} server=${response.headers.get("server") ?? "?"} url=${response.url}`,
+    );
   }
 
   const html = await response.text();
@@ -80,7 +82,7 @@ export async function fetchFinnListing(
     throw new FinnError("NOT_FOUND", "annonsen er fjernet");
   }
   if (lowered.includes("captcha") && !lowered.includes("prisantydning")) {
-    throw new FinnError("BLOCKED", "captcha");
+    throw new FinnError("BLOCKED", `captcha url=${response.url}`);
   }
 
   const outcome = parseFinnListing(html, finnkode);

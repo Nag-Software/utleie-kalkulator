@@ -14,6 +14,8 @@ import { completePurchase, startPurchase } from "@/lib/db/klippekort";
 import { unlockFinn } from "@/lib/klippekort/unlock";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
+  FINN_IMPORT_PAUSET,
+  FINN_PAUSE_MELDING,
   KLIPP_PER_KJOP,
   KLIPP_PRIS_ORE,
   KLIPP_PRODUCT_ID,
@@ -37,6 +39,7 @@ function newReference(): string {
 export async function POST(request: Request) {
   const config = getConfig();
   if (!config.features.payments) return paymentsUnavailable();
+  if (FINN_IMPORT_PAUSET) return jsonError(503, "FINN_PAUSED", FINN_PAUSE_MELDING);
 
   const { allowed } = await checkRateLimit(request, "checkout", 5, 600);
   if (!allowed) return tooManyRequests();

@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { readSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
 import { EMPTY_STATUS, loadStatus } from "@/lib/db/klippekort";
-import { KLIPP_GYLDIGHET_MANEDER, KLIPP_PER_KJOP } from "@/lib/site";
+import {
+  FINN_IMPORT_PAUSET,
+  FINN_PAUSE_MELDING,
+  KLIPP_GYLDIGHET_MANEDER,
+  KLIPP_PER_KJOP,
+} from "@/lib/site";
 import { REFERENCE_PATTERN } from "@/lib/vipps/settle";
 import { KlippekortActions } from "./klippekort-actions";
 import { PaymentPoller } from "./payment-poller";
@@ -175,7 +180,11 @@ export default async function KlippekortPage({
           </p>
         ) : null}
 
-        {config.features.payments ? (
+        {FINN_IMPORT_PAUSET ? (
+          <p className="mt-6 rounded-xl border border-border bg-secondary p-3.5 text-sm">
+            {FINN_PAUSE_MELDING}
+          </p>
+        ) : config.features.payments ? (
           <KlippekortActions
             loggedIn={Boolean(session)}
             remaining={status.remaining}

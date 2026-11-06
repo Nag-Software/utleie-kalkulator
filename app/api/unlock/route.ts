@@ -22,7 +22,11 @@ const errors = {
   expired: [402, "EXPIRED", "Klippekortet er utløpt. Kjøp et nytt kort."],
   empty: [402, "NO_KLIPP", "Du har ingen klipp igjen."],
   not_found: [404, "NOT_FOUND", "Fant ikke annonsen. Er den fjernet?"],
-  blocked: [502, "BLOCKED", "FINN svarte ikke som forventet. Prøv igjen."],
+  blocked: [
+    502,
+    "BLOCKED",
+    "FINN stenger for henting fra oss akkurat nå. Klippet er ikke trukket.",
+  ],
   timeout: [504, "TIMEOUT", "FINN bruker for lang tid. Prøv igjen."],
   parse_failed: [
     422,

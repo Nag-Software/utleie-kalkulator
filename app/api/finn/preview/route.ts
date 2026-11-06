@@ -59,6 +59,9 @@ export async function POST(request: Request) {
   } catch (error) {
     after(() => logFunnelEvent("finn_preview_failed", { finnkode, loggedIn }));
     if (error instanceof FinnError) {
+      console.warn("finn preview failed", finnkode, error.code, error.message);
+    }
+    if (error instanceof FinnError) {
       switch (error.code) {
         case "NOT_FOUND":
           return jsonError(
@@ -70,7 +73,7 @@ export async function POST(request: Request) {
           return jsonError(
             502,
             "BLOCKED",
-            "FINN svarte ikke som forventet. Prøv igjen om litt.",
+            "FINN stenger for henting fra oss akkurat nå. Bruk den manuelle kalkulatoren i mellomtiden.",
           );
         case "TIMEOUT":
           return jsonError(504, "TIMEOUT", "FINN bruker for lang tid. Prøv igjen.");
