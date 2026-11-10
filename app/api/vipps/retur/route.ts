@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { claimPendingPayment } from "@/lib/auth/payment-cookie";
 import { readSession, writeSession } from "@/lib/auth/session";
 import { getConfig } from "@/lib/config";
-import { unlockFinn } from "@/lib/klippekort/unlock";
+import { analysisForReference, claimAnalysis } from "@/lib/db/analyses";
 import { REFERENCE_PATTERN, settlePurchase } from "@/lib/vipps/settle";
 
 /**
@@ -16,15 +16,14 @@ import { REFERENCE_PATTERN, settlePurchase } from "@/lib/vipps/settle";
  *
  * Innlogging skjer kun når `uk_pay`-kapselen viser at dette er samme
  * nettleser som startet betalingen — se `lib/auth/payment-cookie.ts`.
- * Klippene krediteres uansett riktig eier, siden eierskapet kommer fra
+ * Analysene krediteres uansett riktig eier, siden eierskapet kommer fra
  * Vipps og ikke fra referansen i URL-en.
  */
 
-// Første besøk kan hente FINN-annonsen — gi god tid.
 export const maxDuration = 60;
 
 /**
- * Hvor mange ganger klippekortsiden sender kunden tilbake hit mens Vipps
+ * Hvor mange ganger rapportsiden sender kunden tilbake hit mens Vipps
  * ennå ikke har registrert godkjenningen. Med 3 sekunder mellom forsøkene
  * venter vi i underkant av et halvt minutt.
  */
@@ -36,14 +35,19 @@ function redirect(path: string) {
 
 export async function GET(request: Request) {
   const config = getConfig();
-  if (!config.features.payments) return redirect("/klippekort?kjop=feilet");
+  if (!config.features.payments) return redirect("/analyser?kjop=feilet");
 
   const params = new URL(request.url).searchParams;
   const reference = params.get("ref");
   if (!reference || !REFERENCE_PATTERN.test(reference)) {
-    return redirect("/klippekort?kjop=feilet");
+    return redirect("/analyser?kjop=feilet");
   }
   const attempt = Math.max(0, Number.parseInt(params.get("forsok") ?? "0", 10) || 0);
+
+  // Gjaldt kjøpet en KI-analyse, skal kunden tilbake til rapportsiden –
+  // ikke rapportsiden. Koblingen ligger i databasen, ikke i URL-en.
+  const analysisId = await analysisForReference(reference).catch(() => null);
+  const base = analysisId ? `/analyse/${analysisId}` : "/analyser";
 
   try {
     const session = await readSession();
@@ -51,19 +55,19 @@ export async function GET(request: Request) {
 
     switch (result.state) {
       case "aborted":
-        return redirect("/klippekort?kjop=avbrutt");
+        return redirect(`${base}?kjop=avbrutt`);
 
       case "pending":
         // Brukeren er tilbake før Vipps rakk å registrere godkjenningen.
-        // Klippekortsiden sender ham hit igjen om litt; webhooken fullfører
+        // Rapportsiden sender ham hit igjen om litt; webhooken fullfører
         // kjøpet uansett hvis han gir opp.
         return attempt < MAX_ATTEMPTS
-          ? redirect(`/klippekort?kjop=venter&ref=${reference}&forsok=${attempt + 1}`)
-          : redirect("/klippekort?kjop=sen");
+          ? redirect(`${base}?kjop=venter&ref=${reference}&forsok=${attempt + 1}`)
+          : redirect(`${base}?kjop=sen`);
 
       case "no_owner":
         console.error("vipps retur: fant ingen eier for", reference);
-        return redirect("/klippekort?kjop=feilet");
+        return redirect(`${base}?kjop=feilet`);
 
       case "paid":
         break;
@@ -71,10 +75,10 @@ export async function GET(request: Request) {
 
     const { purchase, ownerSub } = result;
 
-    // Logg ham inn, så klippene er hans neste gang også — men bare hvis
+    // Logg ham inn, så analysene er hans neste gang også — men bare hvis
     // dette er nettleseren som startet betalingen. Ellers ville referansen
     // i retur-URL-en fungert som et passord for hvem som helst som fikk
-    // tak i den. Klippene er uansett kreditert riktig eier.
+    // tak i den. Analysene er uansett kreditert riktig eier.
     const sameBrowser = await claimPendingPayment(reference);
     if (ownerSub && sameBrowser && session?.userId !== purchase.userId) {
       await writeSession({
@@ -84,22 +88,19 @@ export async function GET(request: Request) {
       });
     }
 
-    // Kjøpte han for å åpne en bestemt annonse, send ham rett dit.
-    if (purchase.pendingFinnkode) {
-      const unlocked = await unlockFinn(
-        purchase.userId,
-        purchase.pendingFinnkode,
-      );
-      if (unlocked.ok) return redirect(unlocked.calculationUrl);
-      return redirect(`/klippekort?kjop=ok&import=${unlocked.reason}`);
+    if (analysisId) {
+      // Fest kjøperen på analysen, så den er hans også om han senere
+      // starter et nytt kjøp for den samme salgsoppgaven.
+      await claimAnalysis(analysisId, purchase.userId).catch(() => {});
+      return redirect(`/analyse/${analysisId}?kjop=ok`);
     }
 
-    return redirect("/klippekort?kjop=ok");
+    return redirect("/analyser?kjop=ok");
   } catch (error) {
     console.error(
       "vipps retur feilet",
       error instanceof Error ? error.message : error,
     );
-    return redirect("/klippekort?kjop=feilet");
+    return redirect("/analyser?kjop=feilet");
   }
 }

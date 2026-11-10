@@ -6,7 +6,7 @@ import "server-only";
  * som fraværende.
  *
  * Plattformen er Vipps-only: Vipps ePayment tar betalingen, Vipps Login
- * identifiserer brukeren, og Postgres (Supabase) lagrer klippekortene.
+ * identifiserer brukeren, og Postgres (Supabase) lagrer kjøp og analyser.
  */
 function readEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -26,10 +26,8 @@ function readFlag(name: string): boolean {
 export interface AppConfig {
   siteUrl: string;
   sessionSecret?: string;
-  /** dev-only: tving FINN-feilkode for å teste feilstien */
-  finnForceError?: string;
   /**
-   * dev-only opt-in (`DEV_FAKE_PAYMENTS=1`): krediter klippekortet uten å
+   * dev-only opt-in (`DEV_FAKE_PAYMENTS=1`): krediter kjøpet uten å
    * snakke med Vipps. Aldri på av seg selv — ellers ville lokal utvikling
    * sett ut som at betalingen virker mens produksjon mangler nøkler.
    */
@@ -46,8 +44,12 @@ export interface AppConfig {
     merchantSerialNumber?: string;
     environment: "test" | "production";
   };
+  /** OpenAI, for KI-analyse av salgsoppgaver. `model` overstyrer standarden. */
+  openai: { apiKey?: string; model?: string };
   features: {
-    /** Kjøp og bruk av klippekort. */
+    /** KI-analyse: krever OpenAI-nøkkel og database (med lagringsbøtte). */
+    ai: boolean;
+    /** Kjøp med Vipps. */
     payments: boolean;
     /** Innlogging med Vipps. */
     login: boolean;
@@ -83,7 +85,6 @@ export function getConfig(): AppConfig {
   return {
     siteUrl: readEnv("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000",
     sessionSecret,
-    finnForceError: isDev ? readEnv("FINN_FORCE_ERROR") : undefined,
     devFakePayments,
     database: { url: databaseUrl, secretKey: databaseSecretKey },
     vipps: {
@@ -96,7 +97,12 @@ export function getConfig(): AppConfig {
           ? "production"
           : "test",
     },
-    features: { payments, login },
+    openai: { apiKey: readEnv("OPENAI_API_KEY"), model: readEnv("OPENAI_MODEL") },
+    features: {
+      ai: hasDatabase && Boolean(readEnv("OPENAI_API_KEY")),
+      payments,
+      login,
+    },
   };
 }
 

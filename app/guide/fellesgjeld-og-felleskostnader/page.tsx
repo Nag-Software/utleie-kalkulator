@@ -146,8 +146,8 @@ export default function Page() {
       <p>
         Utleiekalkulatoren tar kjøpesum og fellesgjeld hver for seg og regner
         yield og kontantstrøm på totalprisen, med felleskostnadene som løpende
-        kostnad. Henter du en FINN-annonse rett inn, følger fellesgjeld og
-        felleskostnader med automatisk. Test gjerne fellen over før du byr:
+        kostnad. Laster du opp salgsoppgaven til KI-analysen, følger fellesgjeld
+        og felleskostnader med automatisk. Test gjerne fellen over før du byr:
         sett felleskostnadene opp 2 000–3 000 kr og se hva en avdragsstart i
         laget ville gjort med kontantstrømmen din.
       </p>

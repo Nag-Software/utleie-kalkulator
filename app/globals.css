@@ -174,15 +174,18 @@
    * Display-typografi: stram negativ sporing, halvfet – kjennetegnet på temaet.
    * Sporingen skaleres ned på små størrelser så små overskrifter ikke klemmes.
    */
+  /* Inter Display = Inter med optisk størrelse 32. */
   .display {
-    font-weight: 600;
-    letter-spacing: -0.045em;
-    line-height: 1.04;
+    font-variation-settings: "opsz" 32;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
   }
   .display-sm {
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    font-variation-settings: "opsz" 32;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
   .eyebrow {
     @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium tracking-tight text-muted-foreground;

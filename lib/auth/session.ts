@@ -8,8 +8,8 @@ import { getConfig } from "@/lib/config";
  * server-side sesjonstabell. Den varer i ~13 måneder, så brukeren slipper å
  * logge inn med Vipps hver gang han kommer tilbake.
  *
- * Kapselen bærer bare *hvem* brukeren er. Antall klipp leses alltid fra
- * databasen — ellers kunne en gammel kapsel gitt flere klipp enn brukeren
+ * Kapselen bærer bare *hvem* brukeren er. Antall analyser leses alltid fra
+ * databasen — ellers kunne en gammel kapsel gitt flere analyser enn brukeren
  * faktisk har igjen.
  */
 const COOKIE_NAME = "uk_session";

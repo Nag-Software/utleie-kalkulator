@@ -11,6 +11,23 @@ export interface CalcPreset {
  */
 export const EXAMPLE_PRESETS: CalcPreset[] = [
   {
+    // Brukes også som regneeksempel i heroen på forsiden. Leien er SSBs
+    // snitt for 3-roms i hele landet (2025: 13 910 kr), rundet ned.
+    label: "3-roms, 40 % egenkapital",
+    input: {
+      ...DEFAULT_INPUT,
+      purchasePrice: 2_400_000,
+      ownershipType: "selveier",
+      equity: 960_000,
+      interestRate: 5.2,
+      interestOnlyYears: 5,
+      monthlyRent: 13_900,
+      hoaFeesMonthly: 2_800,
+      municipalFeesYearly: 0,
+      insuranceYearly: 1_500,
+    },
+  },
+  {
     label: "2-roms i Oslo",
     input: {
       ...DEFAULT_INPUT,

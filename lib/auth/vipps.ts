@@ -8,7 +8,7 @@ import { vippsSystemHeaders } from "@/lib/vipps/token";
  * Endepunktene er hentet fra Vipps' discovery-dokument
  * (`/access-management-1.0/access/.well-known/openid-configuration`), ikke
  * gjettet. Vi ber kun om `openid name`: telefonnummer og e-post trengs ikke
- * for å eie et klippekort, og da skal vi heller ikke hente dem.
+ * for å eie et kjøp, og da skal vi heller ikke hente dem.
  *
  * NB: Login må aktiveres for salgsenheten i Vipps-portalen. Er den ikke
  * aktivert, svarer autorisasjonsendepunktet «Client not found».

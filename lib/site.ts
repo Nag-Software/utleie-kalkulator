@@ -5,25 +5,27 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://utleie-kalkulator.no";
 export const CONTACT_EMAIL = "casper@nagsoftware.no";
 
-/** Klippekort: én engangsbetaling gir flere FINN-importer. */
-// Må stemme med raden i `public.products` i databasen: id, clips, price_ore
-// og validity_months leses derfra ved kjøp, og verdiene her er teksten vi
-// viser. Endres prisen, må begge steder oppdateres.
-export const KLIPP_PRODUCT_ID = "klippekort-20";
-export const KLIPP_PER_KJOP = 20;
-export const KLIPP_PRIS_NOK = "49";
-export const KLIPP_PRIS_ORE = 4900;
-export const KLIPP_GYLDIGHET_MANEDER = 12;
-
 /**
- * FINN avviser henting fra serverne våre (HTTP 403 fra 4. november 2026).
- * Så lenge dette står på, selges ingen klippekort, og FINN-dialogen sier
- * hvorfor i stedet for å la kunden prøve igjen og igjen. Sett til false når
- * hentingen virker igjen.
+ * KI-analyse av salgsoppgaver. Må stemme med radene i `public.products`:
+ * pris og antall leses derfra ved kjøp, verdiene her er det vi viser og
+ * beløpet vi ber Vipps om.
  */
-export const FINN_IMPORT_PAUSET = true;
-export const FINN_PAUSE_MELDING =
-  "FINN-importen er midlertidig ute av drift fordi FINN har stengt for henting fra serverne våre. Vi selger ikke klippekort mens dette pågår, og klipp du har igjen, beholder du. Den manuelle kalkulatoren er gratis og virker som vanlig.";
+export const KI_PRODUCTS = {
+  "ki-analyse-1": { analyses: 1, priceNok: 49, priceOre: 4900, label: "Én analyse" },
+  "ki-analyse-5": { analyses: 5, priceNok: 149, priceOre: 14900, label: "Fem analyser" },
+} as const;
+export type KiProductId = keyof typeof KI_PRODUCTS;
+export const KI_GYLDIGHET_MANEDER = 12;
+/** Supabase Storage-bøtta og grensen på opplastingen (50 MB). */
+export const KI_BUCKET = "salgsoppgaver";
+export const KI_MAX_BYTES = 50 * 1024 * 1024;
+/**
+ * Større filer enn KI_MAX_BYTES komprimeres i nettleseren før opplasting.
+ * Målet er satt under delingsgrensen i lib/ai/analyze.ts (40 MB), så en
+ * komprimert fil leses i ett KI-kall. Over KI_RAW_MAX_BYTES prøver vi ikke.
+ */
+export const KI_COMPRESS_TARGET_BYTES = 38 * 1024 * 1024;
+export const KI_RAW_MAX_BYTES = 300 * 1024 * 1024;
 
 /**
  * Selskapsidentifikasjon. Kravene til betalingsleverandører (bl.a. Vipps

@@ -11,6 +11,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  axes: ["opsz"],
   display: "swap",
 });
 
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Beregn kontantstrøm, yield og avkastning på utleiebolig på sekunder. Gratis utleiekalkulator uten konto – eller hent tallene rett fra FINN-annonsen.",
+    "Beregn kontantstrøm, yield og avkastning på utleiebolig på sekunder. Gratis utleiekalkulator uten konto, med norske regler for 2026.",
   applicationName: SITE_NAME,
   category: "finance",
   ...(googleSiteVerification
@@ -100,10 +101,10 @@ export default function RootLayout({
                 </Link>
               ))}
               <Link
-                href="/klippekort"
+                href="/analyser"
                 className="ml-1 hidden rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-85 sm:inline-flex"
               >
-                Ditt klippekort
+                Mine analyser
               </Link>
             </nav>
           </div>
@@ -185,10 +186,10 @@ export default function RootLayout({
                 <ul className="mt-4 space-y-2.5">
                   <li>
                     <Link
-                      href="/klippekort"
+                      href="/analyser"
                       className="text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      Klippekortet ditt
+                      Mine analyser
                     </Link>
                   </li>
                   <li>

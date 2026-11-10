@@ -10,7 +10,7 @@ import { cookies } from "next/headers";
  * — fra historikk, en delt skjerm, en referrer-header — kunne åpnet den og
  * blitt logget inn som kjøperen.
  *
- * Klippene krediteres uansett riktig eier, siden eierskapet kommer fra
+ * Analysene krediteres uansett riktig eier, siden eierskapet kommer fra
  * Vipps. Det er kun innloggingen som krever at det er samme nettleser.
  */
 const COOKIE_NAME = "uk_pay";

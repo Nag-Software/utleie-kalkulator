@@ -4,7 +4,7 @@ import { COMPANY, CONTACT_EMAIL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Personvernerklæring",
   description:
-    "Slik behandler utleie-kalkulator.no opplysninger ved beregninger, klippekort, betaling og valgfri innlogging.",
+    "Slik behandler utleie-kalkulator.no opplysninger ved beregninger, KI-analyse, betaling og valgfri innlogging.",
   alternates: { canonical: "/personvern" },
   robots: { index: true, follow: true },
 };
@@ -54,16 +54,25 @@ export default function PersonvernPage() {
             bekreftelse på at beløpet er betalt.
           </li>
           <li>
-            <strong>Innlogging med Vipps:</strong> Klippekortet krever
-            innlogging. Vi ber kun om <code>openid</code> og navn, og lagrer en
+            <strong>Innlogging med Vipps:</strong> Innlogging er valgfri, og
+            brukes til å finne igjen analysene dine på en annen enhet. Vi ber kun om <code>openid</code> og navn, og lagrer en
             pseudonym bruker-ID fra Vipps sammen med navnet ditt. Vi mottar
             ikke fødselsnummer, adresse eller e-post.
           </li>
           <li>
-            <strong>Klippekortet:</strong> Antall klipp, utløpsdato og hvilke
-            FINN-koder du har låst opp, lagres i vår database hos Supabase
-            (servere i EU) knyttet til den pseudonyme bruker-ID-en. Dette er
-            nødvendig for å levere klippekortet.
+            <strong>Kjøp og analyser:</strong> Hvilke analyser du har kjøpt,
+            hvor mange som er igjen, utløpsdato og rapportene som er laget,
+            lagres i vår database hos Supabase (servere i EU) knyttet til den
+            pseudonyme bruker-ID-en. Dette er nødvendig for å levere tjenesten.
+          </li>
+          <li>
+            <strong>KI-analyse av salgsoppgave:</strong> Salgsoppgaven du
+            laster opp, lagres midlertidig hos Supabase (servere i EU) og
+            sendes til OpenAI (USA), som leverer KI-modellen, for å bli
+            lest. Filen slettes fra lagringen vår når analysen er ferdig;
+            selve rapporten lagres og kan åpnes av alle som har lenken til
+            den. Last ikke opp dokumenter med personopplysninger du ikke vil
+            dele.
           </li>
           <li>
             <strong>Misbruksvern:</strong> IP-adresser brukes kun flyktig i
@@ -87,7 +96,7 @@ export default function PersonvernPage() {
         <h2>Dine rettigheter</h2>
         <p>
           Du kan be om innsyn, retting eller sletting av opplysninger knyttet
-          til klippekortet eller innloggingen. Kontakt oss på{" "}
+          til kjøpene, analysene eller innloggingen. Kontakt oss på{" "}
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Du
           har rett til å klage til Datatilsynet.
         </p>

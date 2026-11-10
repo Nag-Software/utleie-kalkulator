@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { writeSession } from "@/lib/auth/session";
 import { exchangeVippsCode } from "@/lib/auth/vipps";
 import { getConfig } from "@/lib/config";
-import { upsertVippsUser } from "@/lib/db/klippekort";
+import { upsertVippsUser } from "@/lib/db/purchases";
 
 const STATE_COOKIE = "uk_vipps_state";
 
@@ -13,14 +13,14 @@ function safeReturnTo(value: unknown): string {
     !value.startsWith("/") ||
     value.startsWith("//")
   ) {
-    return "/klippekort";
+    return "/analyser";
   }
   return value;
 }
 
 function failed(reason: string) {
   return NextResponse.redirect(
-    new URL(`/klippekort?login=${reason}`, getConfig().siteUrl),
+    new URL(`/analyser?login=${reason}`, getConfig().siteUrl),
   );
 }
 

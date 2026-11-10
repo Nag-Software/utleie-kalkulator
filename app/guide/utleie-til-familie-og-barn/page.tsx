@@ -132,8 +132,8 @@ export default function Page() {
         beløp du gir bort, og lav leie kan i tillegg svekke fradragene. Sett
         den faktiske leien inn i utleiekalkulatoren og se hva rabatten betyr i
         kontantstrøm etter skatt per måned og år – gratis og uten konto.
-        Vurderer dere en konkret bolig, kan tallene hentes rett fra
-        FINN-annonsen.
+        Vurderer dere en konkret bolig, kan KI-analysen hente tallene rett fra
+        salgsoppgaven.
       </p>
     </ArticleLayout>
   );

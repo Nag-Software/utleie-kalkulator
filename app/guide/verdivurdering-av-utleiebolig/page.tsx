@@ -136,7 +136,7 @@ export default function Page() {
         I utleiekalkulatoren kan du jobbe baklengs: legg inn leie og
         kostnader, og juster kjøpesummen til netto yield treffer
         avkastningskravet ditt. Tallet du lander på, er budtaket. Med
-        FINN-import hentes annonsens tall automatisk, så du ser med en gang
+        KI-analysen hentes tallene fra salgsoppgaven automatisk, så du ser med en gang
         hvor langt prisantydningen ligger fra investorverdien.
       </p>
     </ArticleLayout>

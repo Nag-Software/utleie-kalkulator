@@ -2,8 +2,6 @@ import type { FaqItem } from "@/lib/faq";
 import {
   COMPANY,
   CONTACT_EMAIL,
-  KLIPP_PER_KJOP,
-  KLIPP_PRIS_NOK,
   SITE_NAME,
   SITE_URL,
 } from "@/lib/site";
@@ -69,14 +67,14 @@ export function webApplicationJsonLd() {
     operatingSystem: "Web",
     inLanguage: "nb-NO",
     description:
-      `Beregn kontantstrøm, yield og avkastning på utleiebolig. Gratis med manuelle tall; klippekort med ${KLIPP_PER_KJOP} FINN-importer for ${KLIPP_PRIS_NOK} kr.`,
+      "Beregn kontantstrøm, yield og avkastning på utleiebolig. Gratis og uten konto. KI-analyse av salgsoppgaven for 49 kr.",
     featureList: [
       "Kontantstrøm per måned etter skatt",
       "Brutto og netto yield",
       "Cash-on-cash-avkastning",
       "Break-even-leie og break-even-rente",
       "Flerårig prognose og amortisering",
-      "Import av tall fra FINN-annonse",
+      "KI-analyse av salgsoppgave (PDF)",
     ],
     offers: [
       {
@@ -87,8 +85,8 @@ export function webApplicationJsonLd() {
       },
       {
         "@type": "Offer",
-        name: `Klippekort med ${KLIPP_PER_KJOP} FINN-importer`,
-        price: KLIPP_PRIS_NOK,
+        name: "KI-analyse av salgsoppgave",
+        price: "49",
         priceCurrency: "NOK",
       },
     ],

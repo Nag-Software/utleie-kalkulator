@@ -1,7 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getConfig } from "@/lib/config";
-import { listPendingPurchases } from "@/lib/db/klippekort";
+import { listStaleAnalysisFiles, markAnalysisFileDeleted } from "@/lib/db/analyses";
+import { listPendingPurchases } from "@/lib/db/purchases";
+import { deleteObject } from "@/lib/storage";
 import { settlePurchase } from "@/lib/vipps/settle";
 import { ensureWebhookRegistered } from "@/lib/vipps/webhooks";
 
@@ -11,14 +13,18 @@ import { ensureWebhookRegistered } from "@/lib/vipps/webhooks";
  * Sikkerhetsnettet bak webhooken: alle kjøp som fortsatt står som
  * «pending», sjekkes mot Vipps og gjøres opp. En godkjent reservasjon
  * holder i flere dager, så én kjøring i døgnet rekker å trekke beløpet og
- * kreditere klippene selv om både retur-URL-en og webhooken uteble.
+ * kreditere analysene selv om både retur-URL-en og webhooken uteble.
  *
- * Den sørger også for at webhooken er registrert hos Vipps.
+ * Den sørger også for at webhooken er registrert hos Vipps, og sletter
+ * salgsoppgaver som har ligget i lagringen i mer enn to døgn.
  *
  * Vercel sender `Authorization: Bearer $CRON_SECRET`. Uten `CRON_SECRET`
  * er endepunktet stengt.
  */
 export const maxDuration = 60;
+
+/** Opplastede filer som ikke er analysert, slettes etter så mange timer. */
+const FILE_MAX_AGE_HOURS = 48;
 
 /** Ferske kjøp lar vi være — kunden er sannsynligvis midt i betalingen. */
 const MIN_AGE_SECONDS = 10 * 60;
@@ -84,5 +90,21 @@ export async function GET(request: Request) {
     console.warn(`avstemming: fullførte ${settled} kjøp som retur og webhook gikk glipp av`);
   }
 
-  return NextResponse.json({ ok: true, webhook, outcomes });
+  // Rydd lagringen. Feil her skal ikke velte avstemmingen: finnes ikke
+  // funksjonen ennå (se supabase/schema.sql), prøver vi igjen i morgen.
+  let filesDeleted = 0;
+  try {
+    for (const file of await listStaleAnalysisFiles(FILE_MAX_AGE_HOURS)) {
+      await deleteObject(file.storagePath);
+      await markAnalysisFileDeleted(file.id);
+      filesDeleted += 1;
+    }
+  } catch (error) {
+    console.error(
+      "avstemming: rydding av lagringen feilet",
+      error instanceof Error ? error.message : error,
+    );
+  }
+
+  return NextResponse.json({ ok: true, webhook, outcomes, filesDeleted });
 }

@@ -1,11 +1,13 @@
-import { ArrowRight, Check, Download, ShieldCheck } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { UploadProspectus } from "@/components/analyse/upload-prospectus";
 import { Calculator } from "@/components/calculator/calculator";
-import { FinnImportDialog } from "@/components/calculator/finn-import-dialog";
-import { Pill, Section, SectionHeading } from "@/components/site/primitives";
-import { Button } from "@/components/ui/button";
+import { EXAMPLE_PRESETS } from "@/components/calculator/presets";
+import { Section, SectionHeading } from "@/components/site/primitives";
+import { calculate } from "@/lib/calc/engine";
 import { FAQ_ITEMS } from "@/lib/faq";
+import { formatNumber, formatPct } from "@/lib/format";
 import { getCategory, GUIDES } from "@/lib/guides";
 import {
   faqJsonLd,
@@ -13,12 +15,6 @@ import {
   webApplicationJsonLd,
   websiteJsonLd,
 } from "@/lib/jsonld";
-import {
-  FINN_IMPORT_PAUSET,
-  KLIPP_GYLDIGHET_MANEDER,
-  KLIPP_PER_KJOP,
-  KLIPP_PRIS_NOK,
-} from "@/lib/site";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -26,172 +22,307 @@ export const metadata: Metadata = {
 
 const FEATURED_GUIDES = GUIDES.slice(0, 3);
 
-/** Myk fargesky bak heroen – ren CSS, ingen bilder å laste. */
-function HeroGlow() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[420px] overflow-hidden"
-    >
-      <div className="absolute left-1/2 top-0 h-[420px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,93,48,0.22),transparent)] blur-2xl" />
-      <div className="absolute left-[28%] top-10 h-[300px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(255,195,0,0.18),transparent)] blur-2xl" />
-      <div className="absolute left-[72%] top-6 h-[320px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(10,202,255,0.14),transparent)] blur-2xl" />
-    </div>
-  );
+/**
+ * Midlertidig hotlenket fra Unsplash for lokal gjennomgang. Før lansering
+ * skal bildet ligge i public/ og gå gjennom next/image.
+ */
+const HERO_PHOTO =
+  "https://images.unsplash.com/photo-1783378357622-dbd9ad3b9c0f?auto=format&fit=crop&w=2400&q=80";
+
+/** SSB tabell 09895, gjennomsnittlig månedlig leie 2025. */
+const SSB_RENT_2ROOM = [
+  { market: "Oslo og Bærum", rent: 15_260 },
+  { market: "Bergen", rent: 11_870 },
+  { market: "Trondheim", rent: 11_850 },
+  { market: "Stavanger", rent: 11_400 },
+  { market: "Hele landet", rent: 11_790 },
+];
+const kr = (value: number) => `${formatNumber(Math.round(value))} kr`;
+const signedKr = (value: number) =>
+  `${value < 0 ? "−" : "+"}${formatNumber(Math.abs(Math.round(value)))} kr`;
+
+/**
+ * Eksempelet i heroen og KI-seksjonen er ikke pyntetall: det er
+ * forhåndsvalget «3-roms, 40 % egenkapital» kjørt gjennom den samme motoren
+ * som kalkulatoren bruker, så tallene kan etterprøves med ett klikk.
+ */
+function buildExample() {
+  const input = EXAMPLE_PRESETS[0].input;
+  const result = calculate(input);
+  const horizon = result.years[input.horizonYears - 1];
+  return {
+    input,
+    result,
+    equityPct: Math.round((input.equity / input.purchasePrice) * 100),
+    totalReturn: horizon?.totalReturn ?? 0,
+  };
 }
 
-function Hero() {
+const mill = (value: number) =>
+  `${(value / 1_000_000).toLocaleString("nb-NO", { maximumFractionDigits: 2 })} mill`;
+
+function Hero({ example }: { example: ReturnType<typeof buildExample> }) {
+  const { input, result, equityPct, totalReturn } = example;
+  const rows = [
+    { label: "Månedsleie", value: kr(input.monthlyRent) },
+    { label: "Egenkapital", value: `${equityPct} %` },
+    {
+      label: "Tåler rente opp til",
+      value: result.breakEvenRatePct ? formatPct(result.breakEvenRatePct) : "–",
+    },
+    {
+      label: `Avkastning på ${input.horizonYears} år`,
+      value: `+${mill(totalReturn)}`,
+    },
+  ];
   return (
-    <section className="relative overflow-hidden">
-      <HeroGlow />
-      <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-14 text-center sm:px-6 sm:pb-14 sm:pt-20">
-        <Pill>Gratis · uten konto · norske regler for 2026</Pill>
-        {/* H1 bærer hovedsøkeordet, men beholder spørsmålet som faktisk
-            selger. Rekkefølgen er bevisst: navnet på verktøyet først.
-            Nedre grense er 2rem, ikke 2.5rem: over det bryter «lønner»
-            ut som en foreldreløs linje for seg selv på 375 px. */}
-        <h1 className="display mx-auto mt-6 max-w-4xl text-[clamp(2rem,7.5vw,4.5rem)]">
-          Utleiekalkulator: lønner utleieboligen seg?
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-          Legg inn seks tall og få kontantstrøm, yield og break-even med en
-          gang. Ingen konto, ingen e-post – og tallene dine ligger i lenken.
-        </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg" className="w-full sm:w-auto">
-            <a href="#kalkulator">
-              Regn ut nå
-              <ArrowRight data-slot="icon" />
-            </a>
-          </Button>
-          <FinnImportDialog
-            trigger={
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                <Download data-slot="icon" />
-                Hent fra FINN-annonse
-              </Button>
-            }
-          />
+    <section className="px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="relative isolate mx-auto max-w-[1400px] overflow-hidden rounded-[28px] text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_PHOTO}
+          alt=""
+          className="absolute inset-0 -z-20 size-full object-cover object-bottom"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(14,32,42,0.62)_0%,rgba(14,32,42,0.2)_48%,rgba(8,12,16,0.6)_100%)]"
+        />
+
+        <div className="mx-auto grid max-w-6xl grid-cols-1 lg:min-h-[720px] lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="flex min-w-0 flex-col px-6 pb-10 pt-12 sm:px-10 sm:pt-16 lg:pb-14 lg:pr-12">
+            {/* H1 bærer hovedsøkeordet først, deretter spørsmålet som selger. */}
+            <h1>
+              <span className="block text-sm font-medium text-white/75">
+                Utleiekalkulator
+              </span>
+              <span className="display mt-4 block max-w-[11ch] text-[clamp(2.75rem,8vw,6.25rem)] !leading-[0.94] !tracking-[-0.05em]">
+                Lønner boligen seg som utleie?
+              </span>
+            </h1>
+
+            <div className="mt-auto pt-12">
+              <UploadProspectus variant="hero" />
+              <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+                {["Tilstandsrapport", "Vedtekter", "Årsregnskap"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-white/15 px-3 py-1 backdrop-blur-md"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                <a
+                  href="#kalkulator"
+                  className="rounded-full px-3 py-1 font-medium underline decoration-white/50 underline-offset-4"
+                >
+                  eller regn selv, gratis
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 flex-col border-t border-white/20 px-6 pb-8 pt-8 sm:px-10 lg:border-l lg:border-t-0 lg:px-8 lg:pb-10 lg:pt-16">
+            <div className="mt-auto rounded-3xl bg-[rgba(12,16,20,0.62)] p-5 backdrop-blur-xl">
+              <p className="text-xs text-white/60">
+                Regneeksempel · 3-roms til {mill(input.purchasePrice)}
+              </p>
+              <p
+                className={`display mt-3 text-[2.5rem] tabular-nums ${
+                  result.monthlyCashflowAfterTax < 0
+                    ? "text-[#ff8a66]"
+                    : "text-[#7ee2a8]"
+                }`}
+              >
+                {signedKr(result.monthlyCashflowAfterTax)}
+              </p>
+              <p className="text-xs text-white/60">
+                per måned etter skatt
+              </p>
+              <dl className="mt-4 divide-y divide-white/10 border-t border-white/10 text-[13px]">
+                {rows.map((row) => (
+                  <div key={row.label} className="flex justify-between py-2.5">
+                    <dt className="text-white/60">{row.label}</dt>
+                    <dd className="font-medium tabular-nums">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-3 text-[11px] leading-snug text-white/45">
+                {formatPct(input.interestRate)} rente, avdragsfritt i{" "}
+                {input.interestOnlyYears} år, {formatPct(input.valueGrowth)}{" "}
+                årlig verdistigning.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function HowItWorks() {
-  const steps = [
-    {
-      title: "Legg inn tallene",
-      text: "Seks felter er nok til å komme i gang – eller lim inn en FINN-annonse og få alt utfylt automatisk.",
-    },
-    {
-      title: "Se svaret umiddelbart",
-      text: "Kontantstrøm, yield og break-even oppdateres live mens du drar i sliderne.",
-    },
-    {
-      title: "Del med lenke",
-      text: "Alle forutsetningene ligger i lenken – del med medinvestor, partner eller banken.",
-    },
-  ];
+/** Ekte markedstall rett under heroen, i stedet for logoer eller slagord. */
+function RentStrip() {
   return (
-    <Section aria-labelledby="slik-fungerer-det" className="py-16 sm:py-24">
-      <SectionHeading
-        id="slik-fungerer-det"
-        eyebrow="Slik fungerer det"
-        title="Fra tall til beslutning på under et minutt"
-        align="center"
-      />
-      <ol className="mt-12 grid gap-4 sm:grid-cols-3">
-        {steps.map((step, index) => (
-          <li
-            key={step.title}
-            className="rounded-2xl border border-border bg-card p-6"
-          >
-            <span className="inline-flex size-8 items-center justify-center rounded-full bg-secondary text-[13px] font-medium">
-              {index + 1}
-            </span>
-            <h3 className="display-sm mt-4 text-lg">{step.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {step.text}
-            </p>
-          </li>
+    <section
+      aria-label="Snittleie for 2-roms, SSB 2025"
+      className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6"
+    >
+      <dl className="grid grid-cols-2 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="col-span-2 sm:col-span-3 lg:col-span-1">
+          <dt className="text-[13px] font-medium">Snittleie 2-roms</dt>
+          <dd className="text-[13px] text-muted-foreground">SSB, 2025</dd>
+        </div>
+        {SSB_RENT_2ROOM.map((item) => (
+          <div key={item.market} className="lg:border-l lg:border-border lg:pl-5">
+            <dd className="display-sm text-xl tabular-nums">{kr(item.rent)}</dd>
+            <dt className="mt-0.5 text-[13px] text-muted-foreground">
+              {item.market}
+            </dt>
+          </div>
         ))}
-      </ol>
+      </dl>
+    </section>
+  );
+}
+
+const AI_POINTS = [
+  "Tallene fylles ut fra salgsoppgaven",
+  "Fellene finner vi, med sidetall",
+  "Du får svaret: kjøp, forhandle eller la være",
+];
+
+const AI_SAMPLE_FINDINGS = [
+  { tone: "bg-warning", text: "Bad fra 2004, TG2", page: 34 },
+  { tone: "bg-positive", text: "Ingen varslede økninger i felleskostnader", page: 51 },
+  { tone: "bg-positive", text: "Utleie tillatt uten styrevedtak", page: 63 },
+];
+
+function AiSection({ example }: { example: ReturnType<typeof buildExample> }) {
+  const { input, result, totalReturn } = example;
+  return (
+    <Section aria-labelledby="ki-analyse" className="py-16 sm:py-24">
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="surface-dark flex flex-col rounded-3xl p-6 sm:p-10">
+          <p className="text-[13px] text-muted-foreground">KI-analyse</p>
+          <h2
+            id="ki-analyse"
+            className="display mt-2 max-w-md text-[clamp(1.75rem,4vw,3rem)]"
+          >
+            Se hva boligen tjener deg, før du byr
+          </h2>
+          <ul className="mt-8 space-y-3 text-[15px]">
+            {AI_POINTS.map((point) => (
+              <li key={point} className="flex items-center gap-3">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/12">
+                  <Check className="size-3" aria-hidden />
+                </span>
+                {point}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-5 pt-12">
+            <p>
+              <span className="display text-5xl tabular-nums">49 kr</span>
+              <span className="ml-2 text-sm text-muted-foreground">
+                per bolig
+              </span>
+            </p>
+            <div className="text-right">
+              <UploadProspectus variant="button" />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Betal med Vipps ·{" "}
+                <Link href="/analyse/eksempel" className="underline underline-offset-2">
+                  se eksempelrapport
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <figure className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-8">
+          <figcaption className="flex items-center justify-between text-[13px]">
+            <span className="font-medium">3-roms til {mill(input.purchasePrice)}</span>
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground">
+              Eksempel
+            </span>
+          </figcaption>
+          <p className="display mt-6 text-5xl tabular-nums text-positive">
+            {signedKr(result.monthlyCashflowAfterTax)}
+          </p>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            per måned etter skatt
+          </p>
+          <ul className="mt-6 divide-y divide-border border-y border-border text-sm">
+            {AI_SAMPLE_FINDINGS.map((finding) => (
+              <li key={finding.text} className="flex items-center gap-2.5 py-3">
+                <span
+                  aria-hidden
+                  className={`size-1.5 shrink-0 rounded-full ${finding.tone}`}
+                />
+                <span className="min-w-0 flex-1">{finding.text}</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                  s. {finding.page}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <dl className="mt-auto flex items-baseline justify-between pt-6">
+            <dt className="text-sm text-muted-foreground">
+              Avkastning på {input.horizonYears} år
+            </dt>
+            <dd className="display-sm text-2xl tabular-nums">
+              +{mill(totalReturn)}
+            </dd>
+          </dl>
+        </figure>
+      </div>
     </Section>
   );
 }
 
-function FinnSection() {
-  const points = [
-    "Kjøpesum, felleskostnader, fellesgjeld og omkostninger fylles ut automatisk",
-    "Riktig eieform og dokumentavgift settes fra annonsen",
-    "Ingen klipp trekkes hvis annonsen ikke kan hentes",
+function Pricing() {
+  const options = [
+    { name: "Én analyse", price: "49 kr", note: "per bolig" },
+    { name: "Fem analyser", price: "149 kr", note: "29,80 kr per bolig, gyldig i 12 måneder" },
   ];
   return (
-    <Section aria-labelledby="finn-import" className="py-6 sm:py-10">
-      <div className="surface-dark relative overflow-hidden rounded-3xl px-6 py-12 sm:px-12 sm:py-16">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-[radial-gradient(closest-side,rgba(255,93,48,0.35),transparent)]"
-        />
-        <div className="relative flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
-          <div className="flex-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/70">
-              <span className="size-1.5 rounded-full bg-cta" />
-              Vurderer du en konkret bolig?
-            </span>
-            <h2
-              id="finn-import"
-              className="display mt-5 max-w-lg text-[clamp(1.75rem,4.5vw,2.75rem)]"
-            >
-              Lim inn FINN-annonsen – vi gjør resten
-            </h2>
-            <ul className="mt-7 space-y-3.5">
-              {points.map((point) => (
-                <li key={point} className="flex gap-3 text-[15px] leading-relaxed">
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-cta">
-                    <Check className="size-3 text-white" aria-hidden />
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="flex flex-col items-start gap-4 lg:w-64">
-            {FINN_IMPORT_PAUSET ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/70">
-                <span className="size-1.5 rounded-full bg-[#ffc300]" />
-                Midlertidig ute av drift
-              </span>
-            ) : null}
+    <Section aria-labelledby="pris" className="py-16 sm:py-24">
+      <div className="surface-dark grid gap-10 rounded-3xl p-6 sm:p-10 lg:grid-cols-2 lg:gap-16 lg:p-14">
+        <div>
+          <p className="text-[13px] text-muted-foreground">Pris</p>
+          <h2 id="pris" className="display mt-2 text-[clamp(1.75rem,4vw,3rem)]">
+            Betal per bolig, ikke per måned
+          </h2>
+          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
+            Kalkulatoren er gratis og uten konto. KI-analysen betaler du for
+            når du har en konkret bolig å vurdere, med Vipps.
+          </p>
+        </div>
+        <ul className="divide-y divide-border border-y border-border self-center">
+          <li className="flex items-baseline justify-between gap-4 py-5">
             <div>
-              {/* Antallet hører til prisen: «49 kr» alene leses lett som
-                  prisen for én annonse. */}
-              <p className="flex flex-wrap items-baseline gap-x-2">
-                <span className="display text-5xl">{KLIPP_PRIS_NOK} kr</span>
-                <span className="text-lg font-semibold text-white/90">
-                  for {KLIPP_PER_KJOP} klipp
-                </span>
-              </p>
-              <p className="mt-1.5 text-[13px] text-white/55">
-                Ett klipp per annonse · gyldig{" "}
-                {KLIPP_GYLDIGHET_MANEDER} måneder
+              <p className="text-[15px] font-medium">Kalkulator</p>
+              <p className="text-[13px] text-muted-foreground">
+                Kontantstrøm, yield og break-even
               </p>
             </div>
-            <FinnImportDialog
-              trigger={
-                <Button variant="cta" size="lg" className="w-full">
-                  <Download data-slot="icon" />
-                  Hent fra FINN
-                </Button>
-              }
-            />
-            <p className="flex items-center gap-1.5 text-xs text-white/55">
-              <ShieldCheck className="size-3.5" aria-hidden />
-              Betal enkelt med Vipps
-            </p>
-          </div>
-        </div>
+            <p className="display text-3xl tabular-nums">0 kr</p>
+          </li>
+          {options.map((option) => (
+            <li
+              key={option.name}
+              className="flex items-baseline justify-between gap-4 py-5"
+            >
+              <div>
+                <p className="text-[15px] font-medium">{option.name}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {option.note}
+                </p>
+              </div>
+              <p className="display text-3xl tabular-nums">{option.price}</p>
+            </li>
+          ))}
+        </ul>
       </div>
     </Section>
   );
@@ -217,33 +348,33 @@ function KeyFiguresExplained() {
     },
   ];
   return (
-    <Section aria-labelledby="nokkeltall" className="py-16 sm:py-24">
-      <SectionHeading
-        id="nokkeltall"
-        eyebrow="Nøkkeltall"
-        title="Tallene som avgjør om utleie lønner seg"
-        align="center"
-      />
-      <dl className="mt-12 grid gap-4 sm:grid-cols-2">
-        {figures.map((figure) => (
-          <div
-            key={figure.term}
-            className="rounded-2xl border border-border bg-card p-6"
-          >
-            <dt className="display-sm text-lg">{figure.term}</dt>
-            <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {figure.text}
-            </dd>
-          </div>
-        ))}
-      </dl>
+    <Section aria-labelledby="nokkeltall" className="py-14 sm:py-20">
+      <div className="grid gap-10 lg:grid-cols-[320px_1fr] lg:gap-16">
+        <SectionHeading
+          id="nokkeltall"
+          eyebrow="Nøkkeltall"
+          title="Tallene som avgjør om utleie lønner seg"
+        />
+        <dl className="grid gap-x-10 sm:grid-cols-2">
+          {figures.map((figure) => (
+            <div key={figure.term} className="border-t border-border py-5">
+              <dt className="text-[15px] font-medium tracking-[-0.01em]">
+                {figure.term}
+              </dt>
+              <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                {figure.text}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </Section>
   );
 }
 
 function AboutCalculator() {
   return (
-    <Section aria-labelledby="om-utleiekalkulator" className="py-16 sm:py-24">
+    <Section aria-labelledby="om-utleiekalkulator" className="py-14 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[320px_1fr] lg:gap-16">
         <SectionHeading
           id="om-utleiekalkulator"
@@ -326,9 +457,7 @@ function AboutCalculator() {
           <p>
             Utleiekalkulatoren er gratis å bruke, krever ingen registrering og
             lagrer ingenting: beregningen ligger i lenken, som du kan dele med
-            medinvestor, partner eller banken. Vil du slippe å taste inn tallene
-            selv, koster et klippekort med {KLIPP_PER_KJOP} FINN-importer{" "}
-            {KLIPP_PRIS_NOK} kr.
+            medinvestor, partner eller banken.
           </p>
         </div>
       </div>
@@ -338,7 +467,7 @@ function AboutCalculator() {
 
 function Faq() {
   return (
-    <Section aria-labelledby="faq" className="py-16 sm:py-24">
+    <Section aria-labelledby="faq" className="py-14 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[320px_1fr] lg:gap-16">
         <SectionHeading id="faq" eyebrow="FAQ" title="Ofte stilte spørsmål" />
         <div className="space-y-3">
@@ -369,7 +498,7 @@ function Faq() {
 
 function GuideTeasers() {
   return (
-    <Section aria-labelledby="guider" className="py-16 sm:py-24">
+    <Section aria-labelledby="guider" className="py-14 sm:py-20">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHeading
           id="guider"
@@ -411,6 +540,7 @@ function GuideTeasers() {
 }
 
 export default function HomePage() {
+  const example = buildExample();
   return (
     <>
       <script
@@ -426,19 +556,32 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: jsonLdString(faqJsonLd(FAQ_ITEMS)) }}
       />
 
-      <Hero />
+      <Hero example={example} />
+      <RentStrip />
+      <AiSection example={example} />
 
-      <div
+      <Section
         id="kalkulator"
-        className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 pb-8 sm:px-6"
+        aria-labelledby="kalkulator-tittel"
+        className="scroll-mt-20 py-16 sm:py-24"
       >
-        <section aria-label="Kalkulator">
-          <Calculator urlSync shareActions examplePresets />
-        </section>
-      </div>
+        <h2
+          id="kalkulator-tittel"
+          className="display text-[clamp(1.625rem,3.6vw,2.5rem)]"
+        >
+          Regn ut selv, gratis
+        </h2>
+        <div className="mt-10">
+          <Calculator
+            startInput={example.input}
+            urlSync
+            shareActions
+            examplePresets
+          />
+        </div>
+      </Section>
 
-      <HowItWorks />
-      <FinnSection />
+      <Pricing />
       <KeyFiguresExplained />
       <AboutCalculator />
       <Faq />

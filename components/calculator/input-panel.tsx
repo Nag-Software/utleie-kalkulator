@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import type { CalcResult } from "@/lib/calc/engine";
 import type { CalcInput } from "@/lib/calc/schema";
 import { formatNOK, formatPct } from "@/lib/format";
-import type { EstimatedCalcField } from "@/lib/research/enrich";
+import type { EstimatedCalcField } from "@/lib/calc/schema";
 import {
   MoneyField,
   NumberSliderField,

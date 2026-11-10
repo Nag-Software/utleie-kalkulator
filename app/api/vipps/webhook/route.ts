@@ -7,12 +7,12 @@ import { REFERENCE_PATTERN, settlePurchase } from "@/lib/vipps/settle";
  *
  * Dette er veien som fullfører et kjøp når kunden godkjente i Vipps-appen
  * men aldri kom tilbake til nettleseren. Uten den ble betalingen stående
- * reservert uten å bli trukket, og kunden fikk ingen klipp.
+ * reservert uten å bli trukket, og kunden fikk ingen analyse.
  *
  * Innholdet brukes bare til å finne referansen; statusen leses alltid fra
  * Vipps i `settlePurchase` (se `lib/vipps/webhooks.ts` for hvorfor vi
  * ikke verifiserer signaturen). Kunden logges ikke inn herfra — han er
- * ikke til stede — men klippene krediteres Vipps-brukeren hans og venter
+ * ikke til stede — men analysene krediteres Vipps-brukeren hans og venter
  * på ham neste gang han logger inn.
  */
 export const maxDuration = 30;

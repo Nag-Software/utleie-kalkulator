@@ -136,7 +136,7 @@ export async function createVippsPayment(options: {
 /**
  * Henter profilen kunden delte under betalingen. Vipps holder dataene
  * tilgjengelig i 168 timer fra samtykket. Feiler dette, er det ikke kritisk
- * — vi har allerede `sub`, som er det vi trenger for å eie klippekortet.
+ * — vi har allerede `sub`, som er det vi trenger for å eie kjøpet.
  */
 export async function getVippsUserinfo(
   sub: string,

@@ -4,7 +4,7 @@ import {
   type CompletedPurchase,
   completePurchase,
   upsertVippsUser,
-} from "@/lib/db/klippekort";
+} from "@/lib/db/purchases";
 import {
   captureVippsPayment,
   getVippsPayment,
@@ -13,7 +13,7 @@ import {
 
 /**
  * Gjør opp ett kjøp mot Vipps: leser statusen derfra, trekker beløpet og
- * krediterer klippene. Delt av de tre veiene et kjøp kan bli fullført på:
+ * krediterer analysene. Delt av de tre veiene et kjøp kan bli fullført på:
  *
  *  - retur-URL-en, når kunden kommer tilbake til nettleseren,
  *  - Vipps-webhooken, når kunden godkjenner i appen men aldri kommer
@@ -66,8 +66,8 @@ export async function settlePurchase(
     throw new Error(`fant ikke beløpet for ${reference}`);
   }
 
-  // Trekk beløpet før klippene krediteres: feiler trekket, skal brukeren
-  // ikke få et klippekort vi aldri får betalt for. Kjøpet blir stående som
+  // Trekk beløpet før analysene krediteres: feiler trekket, skal brukeren
+  // ikke få en analyse vi aldri får betalt for. Kjøpet blir stående som
   // «pending», og neste forsøk prøver igjen.
   if (payment.capturedOre < amountOre) {
     await captureVippsPayment(reference, amountOre);

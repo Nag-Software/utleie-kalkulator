@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { calculate } from "@/lib/calc/engine";
 import { type CalcInput, DEFAULT_INPUT } from "@/lib/calc/schema";
 import { formatNumber } from "@/lib/format";
-import type { EstimatedCalcField } from "@/lib/research/enrich";
+import type { EstimatedCalcField } from "@/lib/calc/schema";
 import { cn } from "@/lib/utils";
 import { InputPanel } from "./input-panel";
 import { EXAMPLE_PRESETS } from "./presets";
@@ -44,6 +44,12 @@ function isEstimatedField(field: keyof CalcInput): field is EstimatedCalcField {
 
 export interface CalculatorProps {
   initialInput?: CalcInput;
+  /**
+   * Tallene kalkulatoren åpner med og nullstilles til når lenken ikke
+   * bærer egne verdier. Til forskjell fra `initialInput` leses URL-en
+   * fortsatt, så delte lenker vinner.
+   */
+  startInput?: CalcInput;
   /** les/skriv inputs i URL-query; andre query-params (f.eks. session_id) bevares */
   urlSync?: boolean;
   /** vis Del-knapp over inputene */
@@ -52,17 +58,17 @@ export interface CalculatorProps {
   examplePresets?: boolean;
   /** kalles debounced når brukeren endrer inputs */
   onInputChange?: (input: CalcInput) => void;
-  /** felt som ble auto-fylt fra FINN/anslag; merket til brukeren endrer dem */
+  /** felt som er forhåndsutfylt med et anslag; merket til brukeren endrer dem */
   estimatedFields?: EstimatedCalcField[];
   /**
-   * Vises øverst i høyre kolonne, over resultatene. Brukes til bildene fra
-   * FINN-annonsen, slik at venstre kolonne er forutsetningene alene.
+   * Vises øverst i høyre kolonne, over resultatene.
    */
   gallery?: React.ReactNode;
 }
 
 export function Calculator({
   initialInput,
+  startInput,
   urlSync = false,
   shareActions = false,
   examplePresets = false,
@@ -70,7 +76,10 @@ export function Calculator({
   estimatedFields: initialEstimated = [],
   gallery,
 }: CalculatorProps) {
-  const [input, dispatch] = useReducer(reducer, initialInput ?? DEFAULT_INPUT);
+  const [input, dispatch] = useReducer(
+    reducer,
+    initialInput ?? startInput ?? DEFAULT_INPUT,
+  );
   const [estimated, setEstimated] = useState(
     () => new Set<EstimatedCalcField>(initialEstimated),
   );
@@ -186,7 +195,10 @@ export function Calculator({
                 aria-label="Nullstill kalkulatoren"
                 title="Nullstill"
                 onClick={() => {
-                  dispatch({ type: "replace", input: { ...DEFAULT_INPUT } });
+                  dispatch({
+                    type: "replace",
+                    input: { ...(startInput ?? DEFAULT_INPUT) },
+                  });
                   toast.success("Kalkulatoren er nullstilt.");
                 }}
               >

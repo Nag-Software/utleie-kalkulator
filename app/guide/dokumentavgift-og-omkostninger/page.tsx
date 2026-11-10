@@ -123,8 +123,8 @@ export default function Page() {
         de senker altså netto yield direkte. Utleiekalkulatoren beregner
         automatisk riktig dokumentavgift ut fra eieform, legger fellesgjelden
         inn i totalprisen, og viser hvordan omkostningene påvirker avkastningen
-        på egenkapitalen din. Henter du tallene fra en FINN-annonse, brukes de
-        eksakte omkostningene fra salgsoppgaven.
+        på egenkapitalen din. Laster du opp salgsoppgaven til KI-analysen, brukes
+        de eksakte omkostningene derfra.
       </p>
     </ArticleLayout>
   );

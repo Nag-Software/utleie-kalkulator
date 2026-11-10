@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
         destination: "https://utleie-kalkulator.no/:path*",
         permanent: true,
       },
+      // Klippekortet er erstattet av KI-analysen.
+      { source: "/klippekort", destination: "/analyser", permanent: false },
       // /sitemap uten filendelse → den faktiske sitemapen.
       {
         source: "/sitemap",

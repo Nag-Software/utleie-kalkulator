@@ -4,9 +4,8 @@ import { Pill } from "@/components/site/primitives";
 import {
   COMPANY,
   CONTACT_EMAIL,
-  KLIPP_GYLDIGHET_MANEDER,
-  KLIPP_PER_KJOP,
-  KLIPP_PRIS_NOK,
+  KI_GYLDIGHET_MANEDER,
+  KI_PRODUCTS,
 } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -23,9 +22,9 @@ const SERVICES = [
     price: "0 kr",
   },
   {
-    name: "Klippekort for FINN-import",
-    what: `${KLIPP_PER_KJOP} klipp som kan brukes til å hente kjøpesum, felleskostnader, fellesgjeld, eieform og omkostninger fra FINN-annonser. Ett klipp brukes per ny annonse; samme annonse kan åpnes igjen uten nytt klipp. Hvert kjøp er gyldig i ${KLIPP_GYLDIGHET_MANEDER} måneder.`,
-    price: `${KLIPP_PRIS_NOK} kr for ${KLIPP_PER_KJOP} klipp`,
+    name: "KI-analyse av salgsoppgave",
+    what: `Du laster opp en salgsoppgave (PDF). En KI-modell henter ut kjøpesum, fellesgjeld, felleskostnader og avgifter, peker på forhold som påvirker lønnsomheten, og resultatet settes inn i kalkulatoren. Én analyse brukes per salgsoppgave; rapporten kan åpnes igjen uten ny betaling. Analysene er gyldige i ${KI_GYLDIGHET_MANEDER} måneder fra kjøpet. Feiler analysen, brukes ingen analyse.`,
+    price: `${KI_PRODUCTS["ki-analyse-1"].priceNok} kr for én analyse, ${KI_PRODUCTS["ki-analyse-5"].priceNok} kr for fem`,
   },
 ];
 
@@ -77,8 +76,9 @@ export default function VilkarPage() {
           <strong>digitalt beregningsverktøy</strong> for å estimere
           lønnsomheten ved å eie og leie ut bolig. Vi formidler, selger eller
           leier <em>ikke</em> ut boliger, lokaler eller andre gjenstander, og er
-          ikke part i noe leieforhold. Det betalte produktet er et klippekort
-          for automatisk import av annonsetall til beregninger.
+          ikke part i noe leieforhold. Det betalte produktet er en KI-analyse
+          av en salgsoppgave du selv laster opp. Klippekort for FINN-import
+          selges ikke lenger; har du ubrukte klipp, kontakt oss.
         </p>
         <div className="my-6 overflow-x-auto">
           <table>
@@ -121,9 +121,8 @@ export default function VilkarPage() {
         </p>
         <p>
           Beløpet belastes når du godkjenner betalingen i Vipps. Kvittering
-          finner du i Vipps-appen. Klippekortet aktiveres umiddelbart etter
-          gjennomført betaling og gir tilgang til {KLIPP_PER_KJOP}{" "}
-          FINN-importer.
+          finner du i Vipps-appen. Analysen starter umiddelbart etter
+          gjennomført betaling.
         </p>
 
         <h2 id="abonnement">4. Bindingstid, oppsigelse og endringer</h2>
@@ -154,9 +153,10 @@ export default function VilkarPage() {
         <h2 id="levering">5. Levering</h2>
         <p>
           Tjenesten er digital og leveres <strong>umiddelbart</strong> på
-          nettstedet – normalt innen få sekunder etter gjennomført betaling. Du
-          får tilgang til klippekortet. Klipp fra hvert kjøp er gyldige i{" "}
-          {KLIPP_GYLDIGHET_MANEDER} måneder fra kjøpsdatoen. Ingenting sendes
+          nettstedet. Analysen starter med en gang betalingen er gjennomført og
+          er normalt ferdig i løpet av få minutter. Analyser du har kjøpt, men
+          ikke brukt, er gyldige i {KI_GYLDIGHET_MANEDER} måneder fra
+          kjøpsdatoen. Ingenting sendes
           fysisk, og det påløper ingen fraktkostnad.
         </p>
         <p>
@@ -199,9 +199,10 @@ export default function VilkarPage() {
           innen 14 dager.
         </p>
         <p>
-          <strong>Mislykket FINN-henting:</strong> Klarer vi ikke å hente
-          annonsen fra FINN – for eksempel fordi den er solgt eller fjernet –
-          brukes det ikke et klipp.
+          <strong>Mislykket analyse:</strong> Klarer vi ikke å analysere
+          salgsoppgaven – for eksempel fordi PDF-en er passordbeskyttet eller
+          skadet – brukes ingen analyse, og du kan prøve igjen med en annen
+          fil.
         </p>
 
         <h2 id="reklamasjon">8. Reklamasjon</h2>
@@ -281,17 +282,17 @@ export default function VilkarPage() {
           Tjenesten leveres «som den er». {COMPANY.legalName} er ikke ansvarlig
           for tap som følge av beslutninger tatt på grunnlag av beregningene, ut
           over det som følger av ufravikelig lovgivning. Vårt samlede ansvar er
-          uansett begrenset til beløpet du har betalt for det aktuelle
-          klippekortet.
+          uansett begrenset til beløpet du har betalt for den aktuelle
+          analysen.
         </p>
 
         <h2 id="datakilder">11. Datakilder og immaterielle rettigheter</h2>
         <p>
-          Ved FINN-import henter tjenesten offentlig tilgjengelige nøkkeltall
-          fra annonsen du selv oppgir, på dine vegne og til din egen beregning.
-          Annonseinnholdet tilhører annonsøren/FINN.no, og vi garanterer ikke at
-          tallene i annonsen er korrekte eller fullstendige. Kontroller alltid
-          tallene mot annonsen og salgsoppgaven før du legger inn bud.
+          KI-analysen bygger på salgsoppgaven du selv laster opp, og brukes til
+          din egen beregning. Dokumentet tilhører megleren og selgeren. Analysen
+          er laget av en KI-modell og kan inneholde feil, og vi garanterer ikke
+          at tallene eller funnene er korrekte eller fullstendige. Kontroller
+          alltid mot salgsoppgaven før du legger inn bud.
         </p>
         <p>
           Innholdet på utleie-kalkulator.no, inkludert kalkulatoren og guidene,

@@ -129,8 +129,8 @@ export default function Page() {
         Leienivået er bare halve regnestykket. Legg kjøpesum, leie, lån og
         kostnader inn i utleiekalkulatoren, så får du kontantstrøm etter
         skatt, yield og break-even-leie for den konkrete boligen – gratis og
-        uten konto. Vurderer du en bolig som ligger ute nå, kan du importere
-        FINN-annonsen direkte. Et klippekort med 20 importer koster 49 kr.
+        uten konto. Vurderer du en bolig som ligger ute nå, kan du laste opp
+        salgsoppgaven og la KI-analysen fylle ut tallene for 49 kr.
       </p>
 
       <h2>Kilder</h2>

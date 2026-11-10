@@ -148,10 +148,10 @@ export default function KontaktPage() {
         <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-muted-foreground">
           <p>
             <strong className="text-foreground">
-              Kjøp, kvittering eller klippekort:
+              Kjøp, kvittering eller analyse:
             </strong>{" "}
-            Send e-post med kvitteringen fra betalingsleverandøren. Klarer vi
-            ikke å hente FINN-annonsen, brukes det ikke et klipp.
+            Send e-post med kvitteringen fra betalingsleverandøren. Feiler en
+            KI-analyse, brukes ingen analyse.
           </p>
           <p>
             <strong className="text-foreground">

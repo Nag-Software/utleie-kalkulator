@@ -12,6 +12,7 @@
 --   20260903155908  drop_legacy_start_purchase_overload
 --   20261016000000  pending_purchase_references
 --   20261020000000  funnel_events
+--   (ikke kjørt ennå)  ki_analyse — blokken «KI-analyse av salgsoppgaver»
 --
 -- All tilgang skjer server-side med den hemmelige nøkkelen. RLS er på uten
 -- policyer, så den publiserbare nøkkelen kommer ikke til noe av dette.
@@ -461,6 +462,331 @@ as $$
     'unlocked', coalesce((
       select json_agg(u.finnkode order by u.unlocked_at desc)
       from public.unlocks u where u.user_id = p_user_id
+    ), '[]'::json)
+  );
+$$;
+
+-- ── KI-analyse av salgsoppgaver ───────────────────────────────────────────
+-- Kunden laster opp en salgsoppgave (PDF), betaler med Vipps og får en
+-- analyse. Betalingen gjenbruker `purchases`: et KI-produkt gir «klipp» som
+-- her er analysekreditter. Kreditten trekkes først når analysen er ferdig,
+-- så en mislykket analyse aldri koster kunden noe.
+--
+-- Må stemme med KI_PRODUCTS i lib/site.ts.
+insert into public.products (id, name, clips, price_ore, validity_months)
+values
+  ('ki-analyse-1', 'KI-analyse – 1 bolig', 1, 4900, 12),
+  ('ki-analyse-5', 'KI-analyse – 5 boliger', 5, 14900, 12)
+on conflict (id) do nothing;
+
+-- Én rad per opplastet salgsoppgave. ID-en er en tilfeldig UUID og fungerer
+-- som delingslenke til rapporten, på samme måte som beregningslenkene.
+-- `user_id` er nullbar: opplastingen skjer før betaling og uten innlogging.
+create table if not exists public.analyses (
+  id                 uuid primary key,
+  user_id            uuid        references public.users (id) on delete set null,
+  status             text        not null default 'created'
+                       check (status in ('created', 'uploaded', 'running', 'done', 'failed')),
+  storage_path       text        not null,
+  filename           text        not null,
+  size_bytes         integer     not null check (size_bytes > 0),
+  purchase_reference text,
+  credit_purchase_id uuid        references public.purchases (id) on delete set null,
+  result             jsonb,
+  error              text,
+  created_at         timestamptz not null default now(),
+  started_at         timestamptz,
+  completed_at       timestamptz
+);
+
+create index if not exists analyses_purchase_reference
+  on public.analyses (purchase_reference)
+  where purchase_reference is not null;
+
+alter table public.analyses enable row level security;
+
+-- Privat bøtte for salgsoppgavene (maks 50 MB, må stemme med KI_MAX_BYTES
+-- i lib/site.ts). 50 MB er taket for opplasting på Supabase sin gratisplan.
+-- Filen slettes når analysen er ferdig.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('salgsoppgaver', 'salgsoppgaver', false, 52428800, array['application/pdf'])
+on conflict (id) do update set file_size_limit = excluded.file_size_limit;
+
+-- Gyldige analysekreditter. Bare KI-produktene teller; gamle FINN-klipp
+-- holdes utenfor.
+create or replace function public.ki_credits_remaining(p_user_id uuid)
+returns integer
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select coalesce(sum(p.remaining), 0)::integer
+  from public.purchases p
+  where p.user_id = p_user_id
+    and p.product_id like 'ki-analyse-%'
+    and p.status = 'paid'
+    and p.remaining > 0
+    and p.expires_at > now();
+$$;
+
+create or replace function public.create_analysis(
+  p_id           uuid,
+  p_user_id      uuid,
+  p_storage_path text,
+  p_filename     text,
+  p_size_bytes   integer
+)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  insert into public.analyses (id, user_id, storage_path, filename, size_bytes)
+  values (p_id, p_user_id, p_storage_path, p_filename, p_size_bytes);
+$$;
+
+create or replace function public.mark_analysis_uploaded(p_id uuid)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  update public.analyses a set status = 'uploaded'
+  where a.id = p_id and a.status = 'created';
+$$;
+
+-- Knytter et påbegynt kjøp til analysen det gjelder, så retur-handleren
+-- ikke må stole på URL-en for å vite hvor kunden skal sendes.
+create or replace function public.attach_analysis_purchase(p_id uuid, p_reference text)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  update public.analyses a set purchase_reference = p_reference
+  where a.id = p_id and a.credit_purchase_id is null;
+$$;
+
+create or replace function public.analysis_for_reference(p_reference text)
+returns uuid
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select a.id from public.analyses a
+  where a.purchase_reference = p_reference
+  order by a.created_at desc
+  limit 1;
+$$;
+
+-- Eieren av analysen: den som lastet opp innlogget, eller den som betalte
+-- kjøpet analysen er knyttet til.
+create or replace function public.analysis_owner(p_id uuid)
+returns uuid
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select coalesce(
+    a.user_id,
+    (select p.user_id from public.purchases p
+     where p.reference = a.purchase_reference and p.status = 'paid')
+  )
+  from public.analyses a where a.id = p_id;
+$$;
+
+-- Tilstanden rapportsiden trenger. `paid` betyr at analysen kan kjøres
+-- (eller er kjørt) uten ny betaling.
+create or replace function public.get_analysis(p_id uuid)
+returns json
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select json_build_object(
+    'id', a.id,
+    'status', a.status,
+    'filename', a.filename,
+    'sizeBytes', a.size_bytes,
+    'result', a.result,
+    'error', a.error,
+    'paid', a.credit_purchase_id is not null
+            or coalesce(public.ki_credits_remaining(public.analysis_owner(a.id)), 0) > 0,
+    'createdAt', a.created_at
+  )
+  from public.analyses a where a.id = p_id;
+$$;
+
+-- En innlogget bruker med kreditter tar eierskap til en analyse uten eier.
+create or replace function public.claim_analysis(p_id uuid, p_user_id uuid)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  update public.analyses a set user_id = p_user_id
+  where a.id = p_id and a.user_id is null and a.credit_purchase_id is null
+    and public.analysis_owner(a.id) is null;
+$$;
+
+-- Starter en kjøring, atomisk. Radlåsen gjør at to samtidige forespørsler
+-- ikke begge kan starte (og betale for) samme analyse.
+--   ok           = kjøringen er startet; `storage_path` sier hvor filen er
+--   done         = allerede ferdig
+--   running      = en annen kjøring pågår (startet for under 10 min siden)
+--   not_uploaded = filen er ikke lastet opp
+--   unpaid       = ingen eier eller ingen kreditt
+create or replace function public.begin_analysis(p_id uuid)
+returns table (outcome text, storage_path text)
+language plpgsql
+set search_path = public, pg_temp
+as $$
+declare
+  v_a     public.analyses;
+  v_owner uuid;
+begin
+  select * into v_a from public.analyses a where a.id = p_id for update;
+  if not found then
+    raise exception 'Ukjent analyse: %', p_id;
+  end if;
+
+  if v_a.status = 'done' then
+    return query select 'done'::text, null::text; return;
+  end if;
+  if v_a.status = 'created' then
+    return query select 'not_uploaded'::text, null::text; return;
+  end if;
+  if v_a.status = 'running' and v_a.started_at > now() - interval '10 minutes' then
+    return query select 'running'::text, null::text; return;
+  end if;
+
+  v_owner := public.analysis_owner(p_id);
+  if v_owner is null
+     or (v_a.credit_purchase_id is null and public.ki_credits_remaining(v_owner) = 0) then
+    return query select 'unpaid'::text, null::text; return;
+  end if;
+
+  update public.analyses a
+  set user_id = v_owner, status = 'running', started_at = now(), error = null
+  where a.id = p_id;
+
+  return query select 'ok'::text, v_a.storage_path;
+end;
+$$;
+
+-- Lagrer resultatet og trekker én kreditt, atomisk. Kreditten trekkes
+-- først her, så en analyse som feiler underveis aldri koster noe.
+--   ok / done  = resultatet er lagret (done: var allerede ferdig)
+--   no_credit  = eieren har ingen gyldig kreditt; resultatet lagres ikke
+create or replace function public.complete_analysis(p_id uuid, p_result jsonb)
+returns text
+language plpgsql
+set search_path = public, pg_temp
+as $$
+declare
+  v_a           public.analyses;
+  v_purchase_id uuid;
+begin
+  select * into v_a from public.analyses a where a.id = p_id for update;
+  if not found then
+    raise exception 'Ukjent analyse: %', p_id;
+  end if;
+  if v_a.status = 'done' then
+    return 'done';
+  end if;
+
+  v_purchase_id := v_a.credit_purchase_id;
+  if v_purchase_id is null then
+    select p.id into v_purchase_id
+    from public.purchases p
+    where p.user_id = v_a.user_id
+      and p.product_id like 'ki-analyse-%'
+      and p.status = 'paid'
+      and p.remaining > 0
+      and p.expires_at > now()
+    order by p.expires_at asc, p.created_at asc
+    limit 1
+    for update;
+
+    if v_purchase_id is null then
+      update public.analyses a
+      set status = 'failed', error = 'Ingen gyldig kreditt'
+      where a.id = p_id;
+      return 'no_credit';
+    end if;
+
+    update public.purchases p set remaining = p.remaining - 1
+    where p.id = v_purchase_id;
+  end if;
+
+  update public.analyses a
+  set status = 'done', result = p_result, error = null,
+      credit_purchase_id = v_purchase_id, completed_at = now()
+  where a.id = p_id;
+
+  return 'ok';
+end;
+$$;
+
+-- Markerer en kjøring som mislykket. Rører aldri en ferdig analyse.
+create or replace function public.fail_analysis(p_id uuid, p_error text)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  update public.analyses a set status = 'failed', error = left(p_error, 500)
+  where a.id = p_id and a.status = 'running';
+$$;
+
+-- Rydding: salgsoppgaver som aldri ble analysert, blir ellers liggende i
+-- lagringen for alltid (gratisplanen har 1 GB). Den daglige jobben henter
+-- stiene her, sletter filene og markerer dem som slettet.
+alter table public.analyses add column if not exists file_deleted_at timestamptz;
+
+create or replace function public.stale_analysis_files(p_min_age_hours integer)
+returns table (id uuid, storage_path text)
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select a.id, a.storage_path
+  from public.analyses a
+  where a.file_deleted_at is null
+    and a.status <> 'running'
+    and a.created_at < now() - make_interval(hours => p_min_age_hours)
+  order by a.created_at
+  limit 200;
+$$;
+
+create or replace function public.mark_analysis_file_deleted(p_id uuid)
+returns void
+language sql
+set search_path = public, pg_temp
+as $$
+  update public.analyses a set file_deleted_at = now() where a.id = p_id;
+$$;
+
+-- Alt «Mine analyser» trenger i ett kall: hvor mange analyser som er igjen,
+-- og rapportene brukeren eier.
+create or replace function public.ki_status(p_user_id uuid)
+returns json
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select json_build_object(
+    'remaining', public.ki_credits_remaining(p_user_id),
+    'expiresAt', (
+      select min(p.expires_at) from public.purchases p
+      where p.user_id = p_user_id and p.product_id like 'ki-analyse-%'
+        and p.status = 'paid' and p.remaining > 0 and p.expires_at > now()
+    ),
+    'analyses', coalesce((
+      select json_agg(json_build_object(
+        'id', a.id,
+        'status', a.status,
+        'filename', a.filename,
+        'address', a.result #>> '{property,address}',
+        'createdAt', a.created_at
+      ) order by a.created_at desc)
+      from public.analyses a
+      where a.user_id = p_user_id and a.status <> 'created'
     ), '[]'::json)
   );
 $$;

@@ -137,7 +137,7 @@ export function ArticleLayout({
           </h2>
           <p className="relative mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/65">
             Kontantstrøm, yield og break-even på sekunder – gratis og uten
-            konto. Eller hent tallene rett fra en FINN-annonse.
+            konto.
           </p>
           <Button asChild variant="cta" size="lg" className="relative mt-7">
             <Link href="/#kalkulator">{ctaAnchorFor(meta.slug)}</Link>

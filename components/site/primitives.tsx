@@ -1,28 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/**
- * Siktekors i hjørnene av en seksjonsramme. Rent dekorativt – markerer
- * krysningspunktene i rutenettet, som i temaet vi etterligner.
- */
-function Cross({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 12 12"
-      aria-hidden
-      className={cn("crosshair", className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-    >
-      <path d="M6 0v12M0 6h12" />
-    </svg>
-  );
-}
-
-/**
- * Seksjonsskall: hårfine loddrette hjelpelinjer i ytterkantene og siktekors
- * i hjørnene. Linjene tegnes bare fra lg og opp, der det er luft til dem.
- */
+/** Seksjonsskall: én hårlinje som skille, innhold på felles bredde. */
 export function Section({
   children,
   className,
@@ -40,18 +18,6 @@ export function Section({
           !bleed && "px-4 sm:px-6",
         )}
       >
-        {/* Loddrette hjelpelinjer i innholdskanten, med siktekors der de
-            møter seksjonsskillet. Bare fra lg og opp – der er det luft. */}
-        <span
-          aria-hidden
-          className="absolute inset-y-0 left-0 hidden w-px bg-border lg:block"
-        />
-        <span
-          aria-hidden
-          className="absolute inset-y-0 right-0 hidden w-px bg-border lg:block"
-        />
-        <Cross className="-left-1.5 -top-1.5 hidden lg:block" />
-        <Cross className="-right-1.5 -top-1.5 hidden lg:block" />
         {children}
       </div>
     </section>
@@ -98,11 +64,13 @@ export function SectionHeading({
         className,
       )}
     >
-      {eyebrow ? <Pill>{eyebrow}</Pill> : null}
+      {eyebrow ? (
+        <p className="text-[13px] text-muted-foreground">{eyebrow}</p>
+      ) : null}
       <h2
         id={id}
         className={cn(
-          "display mt-4 text-[clamp(1.75rem,4.5vw,2.75rem)]",
+          "display mt-2 text-[clamp(1.625rem,3.6vw,2.5rem)]",
           !eyebrow && "mt-0",
         )}
       >
@@ -111,7 +79,7 @@ export function SectionHeading({
       {lead ? (
         <p
           className={cn(
-            "mt-3 text-[15px] leading-relaxed text-muted-foreground sm:text-base",
+            "mt-3 text-[15px] leading-relaxed text-muted-foreground",
             align === "center" && "mx-auto",
           )}
         >

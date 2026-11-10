@@ -127,8 +127,8 @@ export default function Page() {
         sammen: uten regnestykke finnes ikke noe budtak. Utleiekalkulatoren
         gjør regnedelen på minutter – legg inn pris, leie, rente og kostnader
         og få kontantstrøm etter skatt, netto yield og break-even, gratis og
-        uten konto. Med FINN-import hentes tallene rett fra annonsen; et
-        klippekort med 20 importer koster 49 kr.
+        uten konto. Med KI-analysen hentes tallene rett fra salgsoppgaven
+        for 49 kr.
       </p>
     </ArticleLayout>
   );

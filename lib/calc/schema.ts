@@ -57,6 +57,12 @@ export const calcInputSchema = z.object({
 
 export type CalcInput = z.infer<typeof calcInputSchema>;
 
+/** Felt som kan være forhåndsutfylt med et anslag, og merkes til brukeren endrer dem. */
+export type EstimatedCalcField = Extract<
+  keyof CalcInput,
+  "monthlyRent" | "propertyTaxYearly" | "insuranceYearly" | "maintenancePctOfRent"
+>;
+
 export const DEFAULT_INPUT: CalcInput = {
   purchasePrice: 4_000_000,
   ownershipType: "selveier",

@@ -52,11 +52,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Hva koster utleiekalkulatoren?",
     answer:
-      "Kalkulatoren er gratis når du legger inn tallene selv, uten konto og uten begrensninger. Vil du hente tallene automatisk fra FINN, koster et klippekort 49 kr for 20 annonser og er gyldig i 12 måneder. Du logger inn med Vipps og betaler med Vipps. Feiler hentingen, brukes det ikke et klipp. Samme annonse kan åpnes igjen uten nytt klipp.",
+      "Kalkulatoren er gratis, uten konto og uten begrensninger. Vil du at KI-en skal lese salgsoppgaven for deg, koster en analyse 49 kr, eller 149 kr for fem. Du betaler med Vipps, og feiler analysen, betaler du ikke for den.",
   },
   {
     question: "Lagres tallene mine?",
     answer:
-      "Selve beregningen lagres ikke; tallene legges i lenken du kan dele. Kjøper du et klippekort, lagrer vi hvor mange klipp du har igjen og hvilke FINN-annonser du har låst opp, knyttet til en pseudonym bruker-ID fra Vipps. En nødvendig informasjonskapsel holder deg innlogget, så du ikke må logge inn hver gang.",
+      "Selve beregningen lagres ikke; tallene legges i lenken du kan dele. Kjøper du en KI-analyse, lagres rapporten og kjøpet knyttet til en pseudonym bruker-ID fra Vipps. Salgsoppgaven slettes når analysen er ferdig.",
   },
 ];

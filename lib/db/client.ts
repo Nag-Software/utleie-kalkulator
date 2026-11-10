@@ -3,8 +3,8 @@ import { getConfig } from "@/lib/config";
 
 /**
  * Tynn klient mot Supabase sitt REST-lag. Vi kaller bare databasefunksjoner
- * (`/rest/v1/rpc/...`), aldri tabellene direkte: invariantene for klippekort
- * — ett klipp per FINN-kode, idempotent kreditering — ligger i SQL og skal
+ * (`/rest/v1/rpc/...`), aldri tabellene direkte: invariantene for kjøp og analyser
+ * — idempotent kreditering, én kreditt per analyse — ligger i SQL og skal
  * ikke kunne omgås herfra.
  *
  * Nøkkelen er den hemmelige (service_role). Alle tabellene har RLS på uten

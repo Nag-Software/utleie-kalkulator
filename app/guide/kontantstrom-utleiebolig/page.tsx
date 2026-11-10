@@ -196,8 +196,8 @@ export default function Page() {
         Utleiekalkulatoren gjør nøyaktig denne oppstillingen for deg: legg
         inn kjøpesum, leie, lån og kostnader, så får du kontantstrøm etter
         skatt, break-even-leie og prognose år for år – gratis og uten konto.
-        Har du funnet en bolig på FINN, kan du importere annonsen og få
-        feltene forhåndsutfylt. Et klippekort med 20 importer koster 49 kr.
+        Har du funnet en bolig, kan du laste opp salgsoppgaven og få
+        feltene forhåndsutfylt av KI-analysen for 49 kr.
       </p>
     </ArticleLayout>
   );

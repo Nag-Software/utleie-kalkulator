@@ -1,14 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
-import { after, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { vippsAuthorizeUrl } from "@/lib/auth/vipps";
 import { getConfig } from "@/lib/config";
-import { logFunnelEvent } from "@/lib/db/funnel";
 
 const STATE_COOKIE = "uk_vipps_state";
 
 function safeReturnTo(value: string | null): string {
-  if (!value?.startsWith("/") || value.startsWith("//")) return "/klippekort";
+  if (!value?.startsWith("/") || value.startsWith("//")) return "/analyser";
   return value;
 }
 
@@ -16,26 +15,20 @@ export async function GET(request: Request) {
   const config = getConfig();
   if (!config.features.login) {
     return NextResponse.redirect(
-      new URL("/klippekort?login=utilgjengelig", config.siteUrl),
+      new URL("/analyser?login=utilgjengelig", config.siteUrl),
     );
   }
 
   const returnTo = safeReturnTo(
     new URL(request.url).searchParams.get("returnTo"),
   );
-  // Innlogging fra FINN-dialogen bærer annonsen med seg i `returnTo`
-  // (`/klippekort?finn=<kode>`). Bare den regnes som et steg mot et kjøp.
-  const finnkode = new URL(returnTo, config.siteUrl).searchParams.get("finn");
-  if (finnkode && /^\d{8,10}$/.test(finnkode)) {
-    after(() => logFunnelEvent("login_start", { finnkode, loggedIn: false }));
-  }
 
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${config.siteUrl}/api/auth/vipps/callback`;
   const authorizeUrl = vippsAuthorizeUrl({ state, redirectUri });
   if (!authorizeUrl) {
     return NextResponse.redirect(
-      new URL("/klippekort?login=utilgjengelig", config.siteUrl),
+      new URL("/analyser?login=utilgjengelig", config.siteUrl),
     );
   }
 
